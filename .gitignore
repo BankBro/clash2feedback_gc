@@ -1,0 +1,21 @@
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+
+# Local environments and editor files
+.venv/
+.env
+.DS_Store
+
+# Large or generated project data
+data/raw_complexes/*
+!data/raw_complexes/.gitkeep
+data/processed/*/complexes/*
+!data/processed/*/complexes/.gitkeep
+data/processed/*/manifest.parquet
+data/processed/*/schema.json
+data/splits/*/*.txt
+data/splits/*/split_report.csv
+reports/phase0/*.csv
+reports/phase0/*.json

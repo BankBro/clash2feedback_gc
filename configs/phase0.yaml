@@ -1,0 +1,75 @@
+schema_version: "0.1"
+processed_version: "v0_1"
+seed: 20260504
+
+paths:
+  raw_root: "data/raw_complexes"
+  processed_root: "data/processed/v0_1"
+  split_root: "data/splits/v0_1"
+  report_root: "reports/phase0"
+
+ligand:
+  min_heavy_atoms: 15
+  max_heavy_atoms: 60
+  require_single_fragment: true
+  require_3d: true
+  remove_hs: false
+  allowed_elements:
+    - C
+    - N
+    - O
+    - S
+    - P
+    - F
+    - Cl
+    - Br
+    - I
+  reject_metals: true
+  reject_macrocycles: true
+  macrocycle_min_ring_size: 12
+  reject_covalent: true
+
+protein:
+  keep_waters: false
+  keep_hetero: false
+  prefer_mmcif: true
+
+pocket:
+  cutoff_angstrom: 8.0
+  also_record_cutoff_6A: true
+  by_residue: true
+  ligand_heavy_only: true
+  min_atoms_8A: 50
+  max_atoms_8A: 3000
+  max_min_ligand_protein_distance_angstrom: 6.0
+
+scaffold:
+  method: "murcko"
+  min_scaffold_atoms: 3
+
+rgroup:
+  min_heavy_atoms: 2
+  max_heavy_atoms: 15
+  single_anchor_only: true
+  min_valid_rgroups_per_complex: 2
+
+basic_clash_screen:
+  enabled: true
+  min_distance_threshold_angstrom: 1.2
+  max_obvious_clash_pairs: 0
+
+split:
+  ratios: [0.7, 0.1, 0.2]
+  seed: 20260504
+  split_version: "v0_1"
+  group_priority:
+    - uniprot_id
+    - target_id
+    - target_name
+    - protein_family
+    - cluster
+    - pdb_id
+    - complex_id
+
+visual_check:
+  num_manual_check: 5

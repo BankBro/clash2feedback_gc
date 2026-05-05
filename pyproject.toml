@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clash2feedback"
+version = "0.1.0"
+description = "Phase 0 data processing scaffold for Clash2Feedback-GC."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "Clash2Feedback-GC contributors" }
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"

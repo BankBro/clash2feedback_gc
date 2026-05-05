@@ -1,0 +1,19 @@
+name: c2f_cpu
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - rdkit
+  - biopython
+  - mdanalysis
+  - numpy
+  - scipy
+  - pandas
+  - pyarrow
+  - pyyaml
+  - tqdm
+  - pytest
+  - matplotlib
+  - setuptools
+  - wheel
+  - pip
