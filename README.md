@@ -18,6 +18,7 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 | `src/clash2feedback/` | 可复用 Python 包源码 |
 | `scripts/` | 阶段命令行入口 |
 | `tests/` | 阶段 0 自动化测试 |
+| `tmp/` | 临时文件, 中间脚本和一次性输出 |
 
 ## 3. 统一约定
 
@@ -26,6 +27,7 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 - 静态方案文档放在 `docs/`.
 - 实验报告放在 `reports/`.
 - 较重运行产物放在 `runs/`.
+- 临时文件放在 `tmp/`, 必要的实验复盘 Markdown 可以保留并提交.
 - 不使用顶层 `outputs/`.
 - 大型原始数据, processed sample 和运行生成报告默认不提交到 Git.
 

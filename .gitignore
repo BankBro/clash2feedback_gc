@@ -19,3 +19,8 @@ data/splits/*/*.txt
 data/splits/*/split_report.csv
 reports/phase0/*.csv
 reports/phase0/*.json
+
+# Temporary local work
+tmp/*
+!tmp/.gitkeep
+!tmp/*.md
