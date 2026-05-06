@@ -264,7 +264,7 @@ PDBBind / RCSB PDB 少量样本：外部真实性检查，可选
 | anchor | 第一版优先单锚点 R-group |
 | 特殊情况 | 共价配体、金属配合物、多片段盐、macrocycle 先排除 |
 
-阶段 0 先从 40–50 个候选 complex 中筛出 20–30 个 clean complex。
+阶段 0 先从 40–50 个候选 complex 中筛出至少 20 个 clean complex. 20–30 是第一批最低目标, 不是 clean pool 上限. 如果 clean pool target 分布不均, 保留完整 clean pool, 同时派生 target-balanced subset 作为阶段 1-3 mini-loop 的轻量 benchmark.
 
 第一篇最小可跑通版本可以扩大到：
 

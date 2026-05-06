@@ -10,7 +10,7 @@
 
 本次建议提交到 GitHub 的实验相关数据只有本文档:
 
-- `tmp/20260505-phase0-smoke-summary.md`
+- `tmp/20260505/phase0-smoke-summary.md`
 
 本次不提交以下数据:
 

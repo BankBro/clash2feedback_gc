@@ -8,7 +8,9 @@
 
 - `raw_complexes/complex_xxxxxx/`: 原始 `protein.pdb` 或 `protein.cif`, `ligand.sdf`, 可选 `metadata.json`.
 - `processed/v0_1/`: 阶段 0 clean sample, manifest 和 schema.
-- `splits/v0_1/`: train, val, test 划分和 `split_report.csv`.
+- `splits/v0_1/`: train, val, test 划分, `split_report.csv` 和派生 benchmark 清单, 例如 `phase0_balanced_30.txt`.
 - `benchmarks/`: 后续失败样本基准.
 - `candidate_pools/`: 后续候选池.
 - `cache/`: 可删除缓存, 包括 HF 镜像下载的 CrossDocked 小子集文件.
+
+`phase0_balanced_30.txt` 是从 clean pool 派生的 target-balanced 清单, 不是 raw/processed 数据副本, 默认作为运行产物不提交.

@@ -41,6 +41,43 @@
 | 阶段 3 规则定位 | R-group masks、pocket、基础合法性检查 |
 | 阶段 4 局部修复闭环 | editable mask、fixed mask、anchor 信息 |
 
+### 1.1 protein、target 和 pocket 的术语口径
+
+阶段 0 同时使用生物学概念和工程字段, 为避免歧义, 统一采用下面的口径。
+
+| 概念 | 生物学含义 | 阶段 0 中的实现含义 |
+|---|---|---|
+| protein / 蛋白质 | 由氨基酸组成的生物大分子, 是实际分子实体 | 当前样本实际读取的 `protein.pdb` 或 `protein.cif` 坐标文件 |
+| target / 靶点 | 被配体、药物或其他扰动作用后会影响功能的生物对象 | 样本所属的蛋白、结构域或靶点片段分组, 用于 `target_id` 和 split 防泄漏 |
+| pocket / 口袋 | target 上 ligand 实际结合的局部三维区域 | 从当前 protein 坐标中按 ligand heavy atoms 周围 8 Å 提取的局部 protein atoms / residues |
+| ligand / 配体 | 与 target 或 pocket 结合的小分子 | 当前样本的 `ligand.sdf` 三维构象 |
+
+它们的关系可以理解为:
+
+```text
+protein 蛋白质
+  → 在药物发现问题中作为 target 靶点
+      → target 上有一个或多个 pocket 结合口袋
+          → ligand 配体结合在 pocket 中
+```
+
+需要特别区分:
+
+- `target` 是生物学和数据分组概念, 不等于某一个 PDB 文件.
+- `protein.pdb` 是当前样本实际保存和读取的结构坐标, 可以是完整蛋白, 也可以是数据源预裁剪的局部结构.
+- `pocket` 是从当前 `protein.pdb` 里围绕 ligand 再提取的局部区域, 不是完整 target.
+- 同一个 `target_id` 可以对应多个不同 PDB 结构、不同 ligand-bound 构象和不同 receptor 坐标.
+
+在当前阶段 0 主数据中, CrossDocked / IF3 样本的 `protein.pdb` 来自 `*_pocket10.pdb`, 即数据源已经围绕 ligand 裁剪出的约 10 Å 局部 receptor 结构. 阶段 0 再从这个局部结构中提取 8 Å pocket:
+
+```text
+真实完整蛋白 / target
+  → CrossDocked pocket10.pdb, ligand 周围约 10 Å 的局部 protein
+      → phase0 pocket, ligand 周围 8 Å 的局部 residues / atoms
+```
+
+因此, 阶段 0 的 `target_id` 用于判断样本是否属于同一靶点分组, 而 `protein.pdb` 表示当前样本实际输入结构. split 时优先按 `uniprot_id`、`target_id` 或 `target_name` 分组, 不是按 PDB ID 或 protein 文件是否完全相同分组.
+
 ---
 
 ## 2. 阶段 0 做什么
@@ -111,8 +148,13 @@ DiffSBDD example 数据
 | 类型 | 数量 |
 |---|---:|
 | 原始候选 complex | 40–50 个 |
-| 最终 clean complex | 20–30 个 |
+| 第一批 clean complex 最低目标 | 20–30 个 |
 | 每个 complex 可拆 R-groups | 至少 2 个 |
+
+这里的 20–30 是第一批最低验收目标, 不是 clean pool 上限. 当前阶段 0 收尾采用两层数据口径:
+
+- `phase0_clean_pool_v0_1`: 保留全部 phase0 usable clean samples.
+- `phase0_balanced_30_v0_1`: 从 clean pool 派生的 target-balanced subset, up to 30 samples. 当前 actual n = 28, 因为严格执行 max_per_target = 5 且当前只有 8 个 target, 不为凑满 30 放宽 target cap.
 
 ### 4.3 clean complex 条件
 
@@ -1205,10 +1247,11 @@ split:
 ### 13.3 可以进入阶段 1 的标准
 
 ```text
-[ ] 至少 20–30 个 clean processed complexes
+[ ] 至少 20 个 clean processed complexes
 [ ] 每个样本都有 protein、ligand、pocket、scaffold、R-groups、anchors
 [ ] manifest.parquet 可正常筛选
 [ ] train / val / test split 已固定
+[ ] 如 clean pool target 分布不均, 已派生 target-balanced subset
 [ ] check_dataset.py 无 fatal error
 [ ] failed_cases.csv 记录所有失败原因
 [ ] configs/phase0.yaml 记录所有阈值

@@ -187,8 +187,10 @@ Binding Success Rate
 | 数据 | 建议数量 |
 |---|---:|
 | 原始候选 complex | 40–50 个 |
-| 过滤后 clean complex | 20–30 个 |
+| 第一批 clean complex 最低目标 | 20–30 个 |
 | 每个 complex 可拆 R-group | 至少 2 个 |
+
+20–30 是第一批阶段 0 最低目标, 不是 clean pool 上限. 若实际 clean pool 超过该数量且 target 分布不均, 保留完整 clean pool, 同时派生 target-balanced subset 供阶段 1-3 mini-loop 使用. 当前口径为 `phase0_clean_pool_v0_1` 保留 51 个 clean samples, `phase0_balanced_30_v0_1` 为 up to 30 samples, actual n = 28.
 
 ### 3.5 阶段 0 产出
 
@@ -229,6 +231,8 @@ reports/phase0/summary.json
 | 至少 2 个 R-groups | 100% |
 | anchors 可记录 | 100% |
 | processed 文件可重新读取 | 100% |
+
+如果 clean pool target 分布不均, 阶段 0 收尾还应记录 target distribution summary, 并生成不替代 clean pool 的 target-balanced 派生清单.
 
 ---
 

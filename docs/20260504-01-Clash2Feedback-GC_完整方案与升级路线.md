@@ -497,6 +497,8 @@ DiffSBDD example
 
 CrossDocked 是候选数据源，不是完全干净的无碰撞真值库。它包含大量 docking 姿态，可能存在局部碰撞或几何异常。因此在构建基准之前，必须先筛选 clean complex。
 
+阶段 0 小规模数据应表述为 task-specific clean subset. 如果使用 ligand-only scaffold/R-group 预筛, 它适合本项目的 R-group 局部修复任务, 但不是无偏 CrossDocked 子集. 如果 clean pool target 分布不均, 应保留完整 clean pool, 同时派生 target-balanced subset 供后续 mini-loop 使用。
+
 clean complex 建议满足：
 
 - protein 和 ligand 来自同一个 complex；
@@ -508,6 +510,8 @@ clean complex 建议满足：
 - 原始 protein-ligand 没有严重碰撞；
 - 能拆出 scaffold 和至少 2 个 R-groups；
 - 第一版排除共价配体、金属配合物、多片段盐、macrocycle。
+
+这里的基础严重碰撞筛查只作为阶段 0 sanity gate, 不能替代阶段 1 的正式 vdW clash detector 和 repair verifier。
 
 ---
 
