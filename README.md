@@ -30,6 +30,7 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 - 临时文件放在 `tmp/`, 必要的实验复盘 Markdown 可以保留并提交.
 - 不使用顶层 `outputs/`.
 - 大型原始数据, processed sample 和运行生成报告默认不提交到 Git.
+- 使用 Hugging Face 数据源时, 优先检查镜像是否可用; 镜像可用时优先从镜像下载, 并将下载缓存显式放入项目内 `data/cache/`, 避免写入默认 `~/.cache/huggingface`.
 
 ## 4. 阶段 0 用法
 
