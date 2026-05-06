@@ -24,11 +24,17 @@ def basic_original_clash_screen(
         return {
             "min_ligand_protein_distance": float("inf"),
             "num_obvious_clash_pairs": 0,
+            "num_pairs_below_1_0": 0,
+            "num_pairs_below_1_2": 0,
+            "num_pairs_below_1_5": 0,
             "basic_clash_screen_pass": False,
         }
 
     min_distance = float("inf")
     clash_pairs = 0
+    pairs_below_1_0 = 0
+    pairs_below_1_2 = 0
+    pairs_below_1_5 = 0
     chunk_size = 256
     for start in range(0, pocket_coords.shape[0], chunk_size):
         stop = min(start + chunk_size, pocket_coords.shape[0])
@@ -36,9 +42,15 @@ def basic_original_clash_screen(
         distances = np.sqrt(np.sum(diff * diff, axis=2))
         min_distance = min(min_distance, float(distances.min()))
         clash_pairs += int(np.sum(distances < min_distance_threshold))
+        pairs_below_1_0 += int(np.sum(distances < 1.0))
+        pairs_below_1_2 += int(np.sum(distances < 1.2))
+        pairs_below_1_5 += int(np.sum(distances < 1.5))
 
     return {
         "min_ligand_protein_distance": min_distance,
         "num_obvious_clash_pairs": clash_pairs,
+        "num_pairs_below_1_0": pairs_below_1_0,
+        "num_pairs_below_1_2": pairs_below_1_2,
+        "num_pairs_below_1_5": pairs_below_1_5,
         "basic_clash_screen_pass": clash_pairs <= max_obvious_clash_pairs,
     }

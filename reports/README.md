@@ -11,5 +11,7 @@
 - `dataset_check.csv`
 - `failed_cases.csv`
 - `summary.json`
+- `threshold_calibration.csv`
+- `failure_reason_counts.csv`
 - `visual_check_list.csv`
 - `manual_check_template.csv`

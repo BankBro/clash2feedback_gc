@@ -53,12 +53,40 @@ data/raw_complexes/complex_000001/
   metadata.json
 ```
 
+准备 DiffSBDD official example smoke:
+
+```bash
+conda run -n c2f_cpu python scripts/phase0_prepare_diffsbdd_examples.py --output-root data/raw_complexes --force
+```
+
+准备 CrossDocked 小子集:
+
+```bash
+conda run -n c2f_cpu python scripts/phase0_prepare_crossdocked_subset.py \
+  --auto-download \
+  --download-root data/cache/crossdocked_downloads \
+  --output-root data/raw_complexes \
+  --max-candidates 50
+```
+
+如果 `THU-ATOM/crossdocked` 小测试源不足以筛出 20 个 clean complex, 可切换到 IF3 CrossDocked pocket10 archive 公开源:
+
+```bash
+conda run -n c2f_cpu python scripts/phase0_prepare_crossdocked_subset.py \
+  --auto-download \
+  --source if3_archive \
+  --download-root data/cache/crossdocked_downloads \
+  --output-root data/raw_complexes \
+  --max-candidates 50 \
+  --force
+```
+
 运行阶段 0:
 
 ```bash
 conda run -n c2f_cpu python scripts/phase0_build_processed.py
-conda run -n c2f_cpu python scripts/phase0_make_splits.py
 conda run -n c2f_cpu python scripts/phase0_check_dataset.py
+conda run -n c2f_cpu python scripts/phase0_make_splits.py
 ```
 
 主要输出:
@@ -67,7 +95,8 @@ conda run -n c2f_cpu python scripts/phase0_check_dataset.py
 - `data/processed/v0_1/manifest.parquet`
 - `data/processed/v0_1/schema.json`
 - `data/splits/v0_1/train.txt`, `val.txt`, `test.txt`, `split_report.csv`
-- `reports/phase0/dataset_check.csv`, `failed_cases.csv`, `summary.json`, `visual_check_list.csv`
+- `reports/phase0/dataset_check.csv`, `failed_cases.csv`, `summary.json`
+- `reports/phase0/threshold_calibration.csv`, `failure_reason_counts.csv`, `visual_check_list.csv`
 
 ## 5. 测试
 

@@ -77,4 +77,7 @@ def test_basic_clash_screen_counts_obvious_pairs() -> None:
         max_obvious_clash_pairs=0,
     )
     assert result["num_obvious_clash_pairs"] == 1
+    assert result["num_pairs_below_1_0"] == 1
+    assert result["num_pairs_below_1_2"] == 2
+    assert result["num_pairs_below_1_5"] == 2
     assert result["basic_clash_screen_pass"] is False

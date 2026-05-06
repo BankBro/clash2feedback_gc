@@ -13,6 +13,7 @@ def read_ligand_sdf(
     *,
     sanitize: bool = True,
     remove_hs: bool = False,
+    allow_multiple: bool = False,
 ) -> Any:
     Chem = _import_rdkit()
     path = Path(ligand_path)
@@ -20,10 +21,13 @@ def read_ligand_sdf(
         raise FileNotFoundError(f"Ligand file does not exist: {path}")
 
     supplier = Chem.SDMolSupplier(str(path), sanitize=False, removeHs=remove_hs)
-    mol = next((candidate for candidate in supplier if candidate is not None), None)
-    if mol is None:
+    molecules = [candidate for candidate in supplier if candidate is not None]
+    if not molecules:
         raise ValueError(f"No readable molecule found in SDF: {path}")
+    if len(molecules) > 1 and not allow_multiple:
+        raise ValueError(f"Multiple molecules found in SDF, strict phase0 expects one: {path}")
 
+    mol = molecules[0]
     for atom in mol.GetAtoms():
         atom.SetIntProp("orig_atom_idx", atom.GetIdx())
 

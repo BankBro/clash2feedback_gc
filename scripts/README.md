@@ -7,7 +7,12 @@
 ## 2. 阶段 0 命令
 
 ```bash
+python scripts/phase0_prepare_diffsbdd_examples.py --output-root data/raw_complexes --force
+python scripts/phase0_prepare_crossdocked_subset.py --auto-download --download-root data/cache/crossdocked_downloads --output-root data/raw_complexes --max-candidates 50
+python scripts/phase0_prepare_crossdocked_subset.py --auto-download --source if3_archive --download-root data/cache/crossdocked_downloads --output-root data/raw_complexes --max-candidates 50 --force
 python scripts/phase0_build_processed.py --config configs/phase0.yaml
-python scripts/phase0_make_splits.py --config configs/phase0.yaml
 python scripts/phase0_check_dataset.py --config configs/phase0.yaml
+python scripts/phase0_make_splits.py --config configs/phase0.yaml
 ```
+
+`phase0_prepare_crossdocked_subset.py` 优先通过 HF 镜像读取 `THU-ATOM/crossdocked`; 若该小测试源 clean 数不足, 可用 `--source if3_archive` 从 `Yukk1Zz/if3-crossdocked2020` 的 pocket10 archive 流式抽取候选. 下载缓存写入项目内 `data/cache/`.

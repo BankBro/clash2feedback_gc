@@ -11,4 +11,4 @@
 - `splits/v0_1/`: train, val, test 划分和 `split_report.csv`.
 - `benchmarks/`: 后续失败样本基准.
 - `candidate_pools/`: 后续候选池.
-- `cache/`: 可删除缓存.
+- `cache/`: 可删除缓存, 包括 HF 镜像下载的 CrossDocked 小子集文件.

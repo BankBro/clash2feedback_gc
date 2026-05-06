@@ -149,6 +149,9 @@ def build_processed_sample(raw_complex: RawComplex, config: dict[str, Any]) -> d
         "all_coords_finite": _all_coords_finite(protein.coords, ligand.coords, pocket.coords),
         "min_ligand_protein_distance": float(clash_result["min_ligand_protein_distance"]),
         "num_obvious_clash_pairs": int(clash_result["num_obvious_clash_pairs"]),
+        "num_pairs_below_1_0": int(clash_result["num_pairs_below_1_0"]),
+        "num_pairs_below_1_2": int(clash_result["num_pairs_below_1_2"]),
+        "num_pairs_below_1_5": int(clash_result["num_pairs_below_1_5"]),
         "basic_clash_screen_pass": bool(clash_result["basic_clash_screen_pass"]),
         "fatal_errors": [],
         "warnings": list(validity.get("warnings", []))
@@ -292,10 +295,7 @@ def write_schema_json(path: str | Path) -> None:
 def _normalized_metadata(raw_complex: RawComplex) -> dict[str, Any]:
     metadata = dict(raw_complex.metadata)
     complex_id = raw_complex.complex_id
-    split_group = _first_nonempty(
-        metadata,
-        ("uniprot_id", "target_id", "target_name", "protein_family", "cluster", "pdb_id", "split_group"),
-    )
+    split_group, split_group_source = _resolve_split_group(metadata, complex_id)
     metadata.update(
         {
             "pdb_id": metadata.get("pdb_id"),
@@ -307,11 +307,25 @@ def _normalized_metadata(raw_complex: RawComplex) -> dict[str, Any]:
             "chain_ids": metadata.get("chain_ids") or [],
             "ligand_id": metadata.get("ligand_id"),
             "dataset_name": metadata.get("dataset_name") or metadata.get("source") or "unknown",
-            "split_group": split_group or complex_id,
+            "split_group": split_group,
+            "split_group_source": split_group_source,
             "complex_id": complex_id,
         }
     )
     return metadata
+
+
+def _resolve_split_group(metadata: dict[str, Any], complex_id: str) -> tuple[str, str]:
+    if metadata.get("split_group_source") and metadata.get("split_group") not in (None, ""):
+        return str(metadata["split_group"]), str(metadata["split_group_source"])
+    for key in ("uniprot_id", "target_id", "target_name", "protein_family", "cluster", "pdb_id"):
+        value = metadata.get(key)
+        if value not in (None, ""):
+            return str(value), key
+    split_group = metadata.get("split_group")
+    if split_group not in (None, ""):
+        return str(split_group), str(metadata.get("split_group_source") or "split_group")
+    return complex_id, "complex_id"
 
 
 def _first_nonempty(metadata: dict[str, Any], keys: tuple[str, ...]) -> str | None:
@@ -338,15 +352,24 @@ def _manifest_row(sample: dict[str, Any], processed_path: Path) -> dict[str, Any
         "processed_path": str(processed_path),
         "ligand_heavy_atoms": int(sample["ligand"]["num_heavy_atoms"]),
         "num_pocket_atoms": int(sample["pocket"]["num_pocket_atoms"]),
+        "num_pocket_atoms_6A": int(sample["pocket"]["num_atoms_6A"]),
+        "num_pocket_atoms_8A": int(sample["pocket"]["num_atoms_8A"]),
+        "min_ligand_protein_distance": float(sanity["min_ligand_protein_distance"]),
+        "num_obvious_clash_pairs": int(sanity["num_obvious_clash_pairs"]),
+        "num_pairs_below_1_0": int(sanity["num_pairs_below_1_0"]),
+        "num_pairs_below_1_2": int(sanity["num_pairs_below_1_2"]),
+        "num_pairs_below_1_5": int(sanity["num_pairs_below_1_5"]),
         "num_rgroups": int(len(sample["rgroups"])),
         "num_valid_rgroups": int(sanity["num_valid_rgroups"]),
         "num_single_anchor_rgroups": int(sanity["num_single_anchor_rgroups"]),
+        "scaffold_num_atoms": int(sample["scaffold"]["num_atoms"]),
         "scaffold_success": bool(sample["scaffold"]["success"]),
         "valid_ligand": bool(sanity["valid_ligand"]),
         "basic_clash_screen_pass": bool(sanity["basic_clash_screen_pass"]),
         "phase0_usable": len(sanity.get("fatal_errors", [])) == 0,
         "failure_reason": "",
         "split_group": str(metadata.get("split_group") or sample["complex_id"]),
+        "split_group_source": str(metadata.get("split_group_source") or "complex_id"),
         "uniprot_id": metadata.get("uniprot_id"),
         "target_id": metadata.get("target_id"),
         "target_name": metadata.get("target_name"),
@@ -377,15 +400,24 @@ MANIFEST_COLUMNS = [
     "processed_path",
     "ligand_heavy_atoms",
     "num_pocket_atoms",
+    "num_pocket_atoms_6A",
+    "num_pocket_atoms_8A",
+    "min_ligand_protein_distance",
+    "num_obvious_clash_pairs",
+    "num_pairs_below_1_0",
+    "num_pairs_below_1_2",
+    "num_pairs_below_1_5",
     "num_rgroups",
     "num_valid_rgroups",
     "num_single_anchor_rgroups",
+    "scaffold_num_atoms",
     "scaffold_success",
     "valid_ligand",
     "basic_clash_screen_pass",
     "phase0_usable",
     "failure_reason",
     "split_group",
+    "split_group_source",
     "uniprot_id",
     "target_id",
     "target_name",

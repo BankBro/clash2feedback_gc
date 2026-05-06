@@ -61,9 +61,14 @@ def read_protein_structure(
                     continue
 
                 for atom in residue.get_atoms():
+                    if atom.is_disordered():
+                        warnings.append(f"altloc_handled:{chain.id}:{residue_number}:{atom.get_name().strip()}")
                     selected_atom = _select_altloc(atom)
                     atom_name = selected_atom.get_name().strip()
-                    element = _normalize_element(getattr(selected_atom, "element", ""), atom_name)
+                    raw_element = getattr(selected_atom, "element", "")
+                    element = _normalize_element(raw_element, atom_name)
+                    if not str(raw_element or "").strip() and element:
+                        warnings.append(f"element_inferred:{chain.id}:{residue_number}:{atom_name}:{element}")
                     if not element:
                         warnings.append(f"element_missing:{chain.id}:{residue_number}:{atom_name}")
                         element = _infer_element(atom_name)
