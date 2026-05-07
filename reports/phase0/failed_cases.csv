@@ -1,0 +1,2 @@
+complex_id,source,protein_path,ligand_path,failure_reason,stage,message
+complex_diffsbdd_3rfm,diffsbdd_example,/home/lyj/mnt/project/clash2feedback_gc/data/raw_complexes/complex_diffsbdd_3rfm/protein.pdb,/home/lyj/mnt/project/clash2feedback_gc/data/raw_complexes/complex_diffsbdd_3rfm/ligand.sdf,ligand_heavy_atoms_out_of_range,ligand,ligand_heavy_atoms_out_of_range

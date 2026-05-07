@@ -107,9 +107,14 @@ conda run -n c2f_cpu python scripts/phase0_make_balanced_manifest.py \
 conda run -n c2f_cpu python scripts/phase0_generate_visual_check_assets.py \
   --visual-check reports/phase0/visual_check_list.csv \
   --manifest data/processed/v0_1/manifest.parquet \
-  --num-samples 10 \
+  --num-samples 15 \
   --output-root runs/phase0_visual_check \
-  --notes tmp/20260506/phase0-visual-check-notes.md
+  --notes tmp/20260507/phase0-visual-check-notes.md
+
+conda run -n c2f_cpu python scripts/phase0_render_visual_check_images.py \
+  --assets-root runs/phase0_visual_check \
+  --manifest runs/phase0_visual_check/render_manifest.csv \
+  --summary tmp/20260507/phase0-visual-render-summary.md
 ```
 
 主要输出:
@@ -123,7 +128,9 @@ conda run -n c2f_cpu python scripts/phase0_generate_visual_check_assets.py \
 - `reports/phase0/threshold_calibration.csv`, `failure_reason_counts.csv`, `visual_check_list.csv`
 - `runs/phase0_visual_check/`
 
-`runs/phase0_visual_check/complex_xxx/` 是本地可下载的人工抽查包, 包含 `protein.pdb`, `ligand.sdf`, `view.cxc` 和 `view.pml`. 下载单个样本目录后, 在该目录运行 `chimerax view.cxc` 即可打开相对路径版本.
+`runs/phase0_visual_check/complex_xxx/` 是本地可下载的人工抽查包, 包含 `protein.pdb`, `ligand.sdf`, `view_overview.cxc`, `view_clash.cxc`, `view_rgroup.cxc`, `view_ligand.cxc` 和 `view.pml`. 默认抽样 15 个样本. 下载单个样本目录后, 在该目录依次运行 `chimerax view_overview.cxc`, `chimerax view_clash.cxc`, `chimerax view_rgroup.cxc`, `chimerax view_ligand.cxc` 即可查看 pocket-ligand, vdW sphere clash sanity, scaffold/R-group/anchor 高亮和 ligand-only 拆分视图.
+
+`phase0_render_visual_check_images.py` 用服务器端 ChimeraX 批量生成 PNG 初筛图. 默认对每个样本生成 `overview`, `clash`, `rgroup`, `ligand` 四类视图, 每类从 1024 个 ligand-centered 候选方向及额外结构方向中自动选择 `clear_01` 到 `clear_12` 十二个少遮挡视角, 并为每类视图生成一张 `3 x 4` contact sheet, 例如 `clash_contact_sheet.png`. 单图默认保持 `1800 x 1400`, contact sheet 不降采样, 便于放大检查细节. 视角选择先做分层硬过滤, 优先要求 ligand center line 不被 protein 阻挡, ligand 和关键坐标可见, 再按视图用途分别评分: `overview` 偏向口袋入口无遮挡, `clash` 偏向 protein-ligand 接触界面可见, `rgroup` 偏向 scaffold/R-group/anchor 连接可见, `ligand` 偏向配体投影展开. 若严格条件不足 12 张, 会按 `relaxed`, `fallback`, `score_only` 逐级回退, 并在 manifest 的 `camera_selection_tier` 中记录. 同一 `sample_id + view` 的 clear 视角会分组放入同一个 ChimeraX 进程连续保存, 避免每张图重复启动渲染器. `rgroup` 和 `ligand` 视图会缩小 scaffold/R-group marker, 便于看清 ligand 拆分关系; 非 ligand-only 图片会在渲染后做 PNG 方向校正, 尽量让 protein pocket 位于 ligand 下方. 如需回退旧视角, 使用 `--camera-mode fixed-angles`. 这些图片只用于人工初筛, 不替代阶段 1 正式 clash detector.
 
 ## 5. 测试
 

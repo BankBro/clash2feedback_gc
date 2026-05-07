@@ -64,17 +64,32 @@ data/splits/v0_1/phase0_balanced_30.txt
 
 ## 8. 人工可视化抽查
 
-已生成 10 个样本的可视化辅助资产, 并将已有 visual check 样本目录整理为可下载的便携包. 每个样本目录包含:
+已生成 15 个样本的可视化辅助资产, 并将已有 visual check 样本目录整理为可下载的便携包. 每个样本目录包含:
 
 ```text
 protein.pdb
 ligand.sdf
 view.cxc
+view_overview.cxc
+view_clash.cxc
+view_rgroup.cxc
+view_ligand.cxc
 view.pml
 projection.png
+scaffold_atoms.pdb
+valid_rgroup_atoms.pdb
+valid_anchors.bild
+protein_pocket_vdw_atoms.pdb
+ligand_vdw_atoms.pdb
+close_contacts.bild
 ```
 
-`view.cxc` 和 `view.pml` 均使用相对路径, 用户下载单个 `complex_xxx/` 目录到本地后, 可以在该目录运行 `chimerax view.cxc`.
+`view.cxc` 和 `view.pml` 均使用相对路径. 推荐用户下载单个 `complex_xxx/` 目录到本地后, 在该目录依次运行 `chimerax view_overview.cxc`, `chimerax view_clash.cxc`, `chimerax view_rgroup.cxc`, `chimerax view_ligand.cxc`.
+
+- `view_overview.cxc`: protein cartoon + semi-transparent surface + ligand sticks, 用于看 ligand 是否位于 pocket.
+- `view_clash.cxc`: protein/ligand sticks + 半透明 vdW sphere + close-contact 红色标记, 用于肉眼检查明显严重重叠.
+- `view_rgroup.cxc`: 透明 protein 背景 + ligand sticks + scaffold/R-group/anchor 标记层.
+- `view_ligand.cxc`: 隐藏 protein, 只看 ligand 的 scaffold/R-group/anchor 拆分.
 
 ```text
 runs/phase0_visual_check/
@@ -86,9 +101,9 @@ runs/phase0_visual_check/
 tmp/20260506/phase0-visual-check-notes.md
 ```
 
-当前用户尚未完成实际人工可视化检查, 因此 visual check 状态写为 pending / 待填. 当前记录没有把自动生成图片解释为人工 pass, 10 个样本均保守标记为 `requires_human_review`.
+2026-05-07 用户已查看 `runs/phase0_visual_check` 下可视化结果, 反馈为没有明显问题. 当前可将 visual check 状态记为 `accepted_no_obvious_issue`; 单样本表仍保留自动生成的待填模板, 未逐项改写为 pass / fail / uncertain.
 
-因此, 阶段 0 工程已完成, 但数据质量签字尚未完成. 需要用户或研究者查看这些 assets 后, 再将人工抽查状态更新为 pass / fail / uncertain.
+因此, 阶段 0 工程和人工初筛均已满足进入阶段 1 的要求. 仍需在后续报告中说明这些图片只用于人工初筛, 不替代阶段 1 正式 clash detector.
 
 ## 9. docs 检查
 
@@ -103,4 +118,4 @@ tmp/20260506/phase0-visual-check-notes.md
 
 ## 10. 最终建议
 
-阶段 0 工程和数据处理闭环可以关闭. 进入阶段 1 前, 仍建议完成 5-10 个样本的人工可视化抽查签字. 在人工抽查未完成前, 不应把数据质量收尾写成完全签字通过.
+阶段 0 工程和数据处理闭环可以关闭. 下一步进入阶段 1, 正式实现 clash detector 和 reliable repair verifier, 并在文档中保留 task-specific clean subset, pocket10 和 basic clash screen 的边界声明.

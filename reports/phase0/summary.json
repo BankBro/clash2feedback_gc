@@ -1,0 +1,62 @@
+{
+  "num_candidate_complexes": 52,
+  "num_manifest_rows": 51,
+  "num_checked_samples": 51,
+  "num_processed": 51,
+  "num_failed_cases": 1,
+  "num_phase0_usable": 51,
+  "phase0_acceptance_status": "complete",
+  "all_load_ok": true,
+  "failure_reason_counts": [
+    {
+      "failure_reason": "ligand_heavy_atoms_out_of_range",
+      "count": 1
+    }
+  ],
+  "distributions": {
+    "ligand_heavy_atoms": {
+      "count": 51,
+      "min": 23.0,
+      "p25": 23.0,
+      "median": 34.0,
+      "p75": 34.5,
+      "max": 49.0
+    },
+    "num_pocket_atoms_8A": {
+      "count": 51,
+      "min": 119.0,
+      "p25": 179.0,
+      "median": 369.0,
+      "p75": 421.0,
+      "max": 540.0
+    },
+    "min_ligand_protein_distance": {
+      "count": 51,
+      "min": 2.42399001121521,
+      "p25": 2.703255772590637,
+      "median": 2.7296454906463623,
+      "p75": 2.761090397834778,
+      "max": 2.9952869415283203
+    },
+    "num_obvious_clash_pairs": {
+      "count": 51,
+      "min": 0.0,
+      "p25": 0.0,
+      "median": 0.0,
+      "p75": 0.0,
+      "max": 0.0
+    },
+    "num_valid_rgroups": {
+      "count": 51,
+      "min": 2.0,
+      "p25": 2.0,
+      "median": 3.0,
+      "p75": 3.0,
+      "max": 6.0
+    }
+  },
+  "split_group_source_counts": {
+    "target_id": 50,
+    "complex_id": 1
+  }
+}

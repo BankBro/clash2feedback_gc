@@ -4,7 +4,7 @@
 
 - GitHub 仓库: `BankBro/clash2feedback_gc`.
 - 分支: `20260505-180108-phase0-implementation`.
-- 当前文档对应阶段: phase 0 closeout, visual check pending.
+- 当前文档对应阶段: phase 0 closeout. 2026-05-07 用户已查看 `runs/phase0_visual_check` 下可视化结果, 反馈为没有明显问题, 阶段 0 可关闭.
 - 建议优先阅读:
   - `README.md`
   - `tmp/README.md`
@@ -13,7 +13,9 @@
   - `tmp/20260506/phase0-balanced30-summary.md`
   - `tmp/20260506/phase0-target-distribution-summary.md`
   - `tmp/20260506/phase0-prefilter-bias-notes.md`
-  - `tmp/20260506/phase0-visual-check-notes.md`
+  - `tmp/20260507/phase0-web-chatgpt-analysis-brief.md`
+  - `tmp/20260507/phase0-visual-check-notes.md`
+  - `tmp/20260507/phase0-visual-render-summary.md`
   - `configs/phase0.yaml`
   - `scripts/phase0_prepare_crossdocked_subset.py`
   - `scripts/phase0_make_balanced_manifest.py`
@@ -77,7 +79,7 @@
 | DiffSBDD clean 数 | 1 |
 | failed cases | 1 |
 | phase0 usable | 51 |
-| pytest | 22 passed |
+| pytest | 32 passed |
 
 failed case:
 
@@ -90,7 +92,7 @@ failed case:
 - 阶段 0 工程验收通过.
 - 51 个 clean samples 保留为 `phase0_clean_pool_v0_1`.
 - 不删除 51 个 clean samples.
-- 进入阶段 1 前, 仍需要人工可视化抽查签字.
+- 用户已完成阶段 0 可视化初筛, 反馈为没有明显问题, 阶段 0 可以关闭并进入阶段 1.
 
 ## 5. 阈值与分布
 
@@ -166,11 +168,11 @@ unbiased CrossDocked subset
 
 ## 8. 可视化检查状态
 
-人工可视化检查尚未完成, 当前状态应写为:
+人工可视化检查已完成初筛, 当前状态应写为:
 
 ```text
-visual_check_status = pending
-manual_check_status = to_be_filled
+visual_check_status = accepted_no_obvious_issue
+manual_check_status = user_visual_scan_completed
 ```
 
 已生成便携式 ChimeraX / PyMOL 检查包到本地运行目录:
@@ -185,27 +187,45 @@ runs/phase0_visual_check/complex_xxx/
 protein.pdb
 ligand.sdf
 view.cxc
+view_overview.cxc
+view_clash.cxc
+view_rgroup.cxc
+view_ligand.cxc
 view.pml
 projection.png
+scaffold_atoms.pdb
+valid_rgroup_atoms.pdb
+valid_anchors.bild
+protein_pocket_vdw_atoms.pdb
+ligand_vdw_atoms.pdb
+close_contacts.bild
 ```
 
-`view.cxc` 和 `view.pml` 已改为相对路径. 用户下载单个 `complex_xxx/` 目录到本地后, 可以在该目录运行:
+`view.cxc` 和 `view.pml` 已改为相对路径. 推荐用户下载单个 `complex_xxx/` 目录到本地后, 在该目录按顺序运行:
 
 ```bash
-chimerax view.cxc
+chimerax view_overview.cxc
+chimerax view_clash.cxc
+chimerax view_rgroup.cxc
+chimerax view_ligand.cxc
 ```
+
+- `view_overview.cxc`: protein cartoon + transparent pocket surface + ligand sticks, 用于看 ligand 是否在 pocket 中.
+- `view_clash.cxc`: protein/ligand sticks + translucent vdW spheres + close-contact 红色标记, 用于肉眼检查 obvious severe overlap.
+- `view_rgroup.cxc`: transparent protein context + ligand sticks + scaffold/R-group/anchor 标记层, 用于检查 scaffold, valid R-group 和 valid anchor 是否合理.
+- `view_ligand.cxc`: 隐藏 protein, 只看 ligand 的 scaffold/R-group/anchor 拆分.
 
 由于 `runs/phase0_visual_check/` 包含 raw structure 副本和 PNG, 默认不提交 Git. Web 端 ChatGPT 只能看到本文件中的状态摘要, 看不到实际结构图.
 
-当前建议至少人工看 5 个 high-priority 样本:
+2026-05-07 用户已查看本地可视化结果并反馈没有明显问题. 下方 high-priority 表保留为抽查模板和样本索引:
 
 | complex_id | target_id | status |
 |---|---|---|
-| `complex_crossdocked_000001` | `CDGT2_BACCI_28_713_0` | pending |
-| `complex_crossdocked_000002` | `CDGT2_BACCI_28_713_0` | pending |
-| `complex_crossdocked_000003` | `CDGT2_BACCI_28_713_0` | pending |
-| `complex_crossdocked_000004` | `CDGT2_BACCI_28_713_0` | pending |
-| `complex_crossdocked_000005` | `CDGT2_BACCI_28_713_0` | pending |
+| `complex_crossdocked_000001` | `CDGT2_BACCI_28_713_0` | user scan ok |
+| `complex_crossdocked_000002` | `CDGT2_BACCI_28_713_0` | user scan ok |
+| `complex_crossdocked_000003` | `CDGT2_BACCI_28_713_0` | user scan ok |
+| `complex_crossdocked_000004` | `CDGT2_BACCI_28_713_0` | user scan ok |
+| `complex_crossdocked_000005` | `CDGT2_BACCI_28_713_0` | user scan ok |
 
 检查项:
 
@@ -216,7 +236,7 @@ chimerax view.cxc
 
 ## 9. 需要网页端重点分析的问题
 
-- 阶段 0 工程是否可以关闭, 在 visual check pending 的前提下是否应阻止进入阶段 1.
+- 阶段 0 是否可以关闭, 以及在进入阶段 1 前还应保留哪些风险声明.
 - `phase0_clean_pool_v0_1` 保留 51 个样本, `phase0_balanced_30_v0_1` 使用 actual n = 28 是否合理.
 - target 分布不均是否还需要进一步处理, 是否需要 target-aware streaming reselection.
 - ligand-only scaffold/R-group 预筛偏差是否可以接受, 在论文或报告中如何准确表述.

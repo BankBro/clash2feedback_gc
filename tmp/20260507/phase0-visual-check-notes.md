@@ -2,13 +2,14 @@
 
 ## 总体结论
 
-- 检查样本数: 14.
-- pass: 0.
+- 检查样本数: 15.
+- user_visual_scan_status: accepted_no_obvious_issue.
+- pass: 未逐样本填写.
 - fail: 0.
 - uncertain: 0.
-- requires_human_review: 14.
-- 是否发现系统性错误: 未发现可由自动脚本确认的系统性错误; 仍需人工查看图片或分子可视化软件确认.
-- 是否建议进入阶段 1 前继续修阶段 0: 若人工抽查未完成, 不建议把数据质量签字视为完成.
+- requires_human_review: 下方单样本表仍保留自动生成的待填模板.
+- 是否发现系统性错误: 用户已查看 `runs/phase0_visual_check` 下可视化结果, 反馈为没有明显问题; 未发现需要返回阶段 0 修复的系统性错误.
+- 是否建议进入阶段 1 前继续修阶段 0: 不需要. 阶段 0 可关闭, 但下方逐样本字段未按 pass / fail / uncertain 逐项改写.
 
 ## 单样本记录
 
@@ -24,10 +25,11 @@
 | complex_crossdocked_000026 | RIP1_MOMCH_24_270_0 | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_crossdocked_000026`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=13,valid_rgroup_atoms=4,valid_anchor_connections=2,protein_vdw_atoms=291,ligand_vdw_atoms=23,visual_close_contacts=0; projection_status=projection_png_generated |
 | complex_diffsbdd_5ndu | complex_diffsbdd_5ndu | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_diffsbdd_5ndu`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=40,valid_rgroup_atoms=8,valid_anchor_connections=2,protein_vdw_atoms=274,ligand_vdw_atoms=49,visual_close_contacts=0; projection_status=projection_png_generated |
 | complex_crossdocked_000048 | HEPB_PEDHD_25_772_0 | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_crossdocked_000048`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=13,valid_rgroup_atoms=9,valid_anchor_connections=3,protein_vdw_atoms=306,ligand_vdw_atoms=26,visual_close_contacts=0; projection_status=projection_png_generated |
+| complex_crossdocked_000017 | RARA_HUMAN_173_420_0 | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_crossdocked_000017`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=23,valid_rgroup_atoms=11,valid_anchor_connections=3,protein_vdw_atoms=491,ligand_vdw_atoms=34,visual_close_contacts=0; projection_status=projection_png_generated |
+| complex_crossdocked_000031 | SMYD2_HUMAN_2_433_0 | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_crossdocked_000031`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=20,valid_rgroup_atoms=13,valid_anchor_connections=3,protein_vdw_atoms=381,ligand_vdw_atoms=34,visual_close_contacts=0; projection_status=projection_png_generated |
+| complex_crossdocked_000021 | IPPK_MOUSE_1_468_0 | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_crossdocked_000021`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=6,valid_rgroup_atoms=30,valid_anchor_connections=6,protein_vdw_atoms=349,ligand_vdw_atoms=36,visual_close_contacts=0; projection_status=projection_png_generated |
 | complex_crossdocked_000007 | CDGT2_BACCI_28_713_0 | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_crossdocked_000007`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=13,valid_rgroup_atoms=4,valid_anchor_connections=2,protein_vdw_atoms=155,ligand_vdw_atoms=23,visual_close_contacts=0; projection_status=projection_png_generated |
-| complex_crossdocked_000008 | CDGT2_BACCI_28_713_0 | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_crossdocked_000008`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=13,valid_rgroup_atoms=4,valid_anchor_connections=2,protein_vdw_atoms=162,ligand_vdw_atoms=23,visual_close_contacts=0; projection_status=projection_png_generated |
-| complex_crossdocked_000009 | CDGT2_BACCI_28_713_0 | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_crossdocked_000009`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=13,valid_rgroup_atoms=4,valid_anchor_connections=2,protein_vdw_atoms=159,ligand_vdw_atoms=23,visual_close_contacts=0; projection_status=projection_png_generated |
-| complex_crossdocked_000010 | CDGT2_BACCI_28_713_0 | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_crossdocked_000010`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=13,valid_rgroup_atoms=4,valid_anchor_connections=2,protein_vdw_atoms=165,ligand_vdw_atoms=23,visual_close_contacts=0; projection_status=projection_png_generated |
+| complex_crossdocked_000030 | ODP1_ECOLI_2_887_0 | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires_human_review | requires human review; assets: `runs/phase0_visual_check/complex_crossdocked_000030`; copy_status=protein_copied,ligand_copied; marker_status=scaffold_atoms=12,valid_rgroup_atoms=19,valid_anchor_connections=2,protein_vdw_atoms=482,ligand_vdw_atoms=34,visual_close_contacts=0; projection_status=projection_png_generated |
 
 ## 复现命令
 
@@ -46,6 +48,6 @@ chimerax view.cxc
 `view.cxc` 和 `view.pml` 使用相对路径. 下载某个样本目录到本地后, 只要 `protein.pdb`, `ligand.sdf` 和脚本在同一目录, 即可直接打开.
 
 推荐在 ChimeraX 中按顺序打开 `view_overview.cxc`, `view_clash.cxc`, `view_rgroup.cxc`, `view_ligand.cxc`.
-`view_clash.cxc` 会叠加半透明 vdW sphere 和 close-contact 红色标记, 便于判断是否存在肉眼明显严重重叠; `view_rgroup.cxc` 和 `view_ligand.cxc` 会叠加 scaffold, valid R-group 和 valid anchor 标记层.
+`view_clash.cxc` 会叠加灰色 protein vdW sphere, royalblue ligand vdW sphere, 黑色 silhouette 轮廓和 close-contact 红色标记, 便于判断是否存在肉眼明显严重重叠; `view_rgroup.cxc` 和 `view_ligand.cxc` 会叠加 scaffold, valid R-group 和 valid anchor 标记层.
 
 当前记录没有把自动生成图片解释为人工 pass; 需要研究者实际查看后再把状态改为 pass / fail / uncertain.

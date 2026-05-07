@@ -10,5 +10,5 @@ Python 包名为 `clash2feedback`, 路径为 `src/clash2feedback/`.
 - `chemistry/`: ligand validity, Murcko scaffold 和 R-group 拆分.
 - `pocket/`: ligand 周围 pocket 提取.
 - `geometry/`: basic original clash screen.
-- `data/`: processed sample 构建, dataset check 和 split.
+- `data/`: processed sample 构建, dataset check, split, visual check assets 和 ChimeraX 初筛图渲染.
 - `utils/`: 配置和文件工具.

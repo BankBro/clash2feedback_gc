@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
@@ -12,9 +13,9 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate phase0 visual check helper assets.")
     parser.add_argument("--visual-check", default="reports/phase0/visual_check_list.csv")
     parser.add_argument("--manifest", default="data/processed/v0_1/manifest.parquet")
-    parser.add_argument("--num-samples", type=int, default=10)
+    parser.add_argument("--num-samples", type=int, default=15)
     parser.add_argument("--output-root", default="runs/phase0_visual_check")
-    parser.add_argument("--notes", default="tmp/20260506/phase0-visual-check-notes.md")
+    parser.add_argument("--notes", default=f"tmp/{date.today():%Y%m%d}/phase0-visual-check-notes.md")
     return parser.parse_args()
 
 
