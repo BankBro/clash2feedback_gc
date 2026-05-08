@@ -1,0 +1,17 @@
+dataset_name,receptor_scope,delta_angstrom,failure_type,count
+phase0_balanced_30_v0_1,phase0_pocket8,0.3,ambiguous_region_clash,1
+phase0_balanced_30_v0_1,phase0_pocket8,0.3,no_clash,27
+phase0_balanced_30_v0_1,phase0_pocket8,0.4,no_clash,28
+phase0_balanced_30_v0_1,phase0_pocket8,0.5,no_clash,28
+phase0_balanced_30_v0_1,pocket10_all_atoms,0.3,ambiguous_region_clash,1
+phase0_balanced_30_v0_1,pocket10_all_atoms,0.3,no_clash,27
+phase0_balanced_30_v0_1,pocket10_all_atoms,0.4,no_clash,28
+phase0_balanced_30_v0_1,pocket10_all_atoms,0.5,no_clash,28
+phase0_clean_pool_v0_1,phase0_pocket8,0.3,ambiguous_region_clash,1
+phase0_clean_pool_v0_1,phase0_pocket8,0.3,no_clash,50
+phase0_clean_pool_v0_1,phase0_pocket8,0.4,no_clash,51
+phase0_clean_pool_v0_1,phase0_pocket8,0.5,no_clash,51
+phase0_clean_pool_v0_1,pocket10_all_atoms,0.3,ambiguous_region_clash,1
+phase0_clean_pool_v0_1,pocket10_all_atoms,0.3,no_clash,50
+phase0_clean_pool_v0_1,pocket10_all_atoms,0.4,no_clash,51
+phase0_clean_pool_v0_1,pocket10_all_atoms,0.5,no_clash,51

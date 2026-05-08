@@ -74,6 +74,8 @@ Binding Success Rate
 | 不同时处理所有失败类型 | 第一篇只聚焦局部 R-group clash |
 | 不把碰撞检测本身当主要创新 | 现有工具已能做检测和过滤 |
 
+第一篇主任务是 `single-region R-group clash repair`. Multi-region clash, scaffold clash, global pose failure, covalent ligand, metal coordination 等情况第一版应识别并标记为 `unsupported` 或 `reject`, 不进入 single-R-group repair 主指标. 后续可通过 expand-mask, sequential repair, full resampling, multi-label critic 或 learned adapter 逐步处理.
+
 ---
 
 ## 2. 第一篇核心实验问题
@@ -329,6 +331,19 @@ L=S+\mathcal R
 
 这是第一版最稳的注入方式。
 
+注意: anchor bond rotation 构造的是 controlled synthetic failed pose, 用于建立标签清楚的局部碰撞样本, 主要服务 detector, locator 和 verifier 的早期验证. 它不应被表述为真实热力学稳定结合构象.
+
+第一版 rotation injection 只允许围绕化学上可旋转的 single bond 进行. 以下情况应排除或标记 unsupported:
+
+- ring bond；
+- double bond；
+- amide-like bond；
+- 强共轭受限 bond；
+- 多锚点 linker；
+- 旋转后 ligand internal severe clash；
+- 旋转后 scaffold 或非目标 R-group 明显漂移；
+- 旋转后变成 multi-region clash。
+
 ### 方式二：局部构象扰动
 
 扰动失败取代基内部可旋转键，但固定 scaffold 和 anchor。
@@ -336,6 +351,20 @@ L=S+\mathcal R
 ### 方式三：合法片段替换
 
 用相似大小或稍大的片段替换原 R-group，更接近“取代基太大导致 clash”的情况，但工程复杂，建议作为增强。
+
+### 人工失败集分层
+
+人工失败样本建议分层保存和报告:
+
+| split | 构造方式 | 用途 |
+|---|---|---|
+| `easy_rotation` | single R-group anchor bond rotation | detector / locator debug 和基础主集 |
+| `torsion_perturb` | 目标 R-group 内部 rotatable bond 扰动 | 更接近局部构象错误 |
+| `directed_clash` | 朝 protein hotspot 方向定向扰动 | 构造 mild / medium / severe 难度 |
+| `fragment_replace` | 合法 R-group 替换 | 更接近“取代基太大导致 clash” |
+| `hard_multi_region` | 多 R-group 或模糊失败区域 | stress test / reject test |
+
+第一篇主结果可以聚焦 `single-region dominant` 样本; hard split 应单独报告, 不应混入主指标.
 
 ---
 
@@ -607,6 +636,15 @@ u^*=\arg\max_{u\in\mathcal U}\bar U(u)
 ```text
 Reliable Repair = old clash resolved + no new clash + geometry valid + keep region stable
 ```
+
+若 full receptor 可用, 建议报告两套可靠修复率:
+
+| 指标 | 含义 |
+|---|---|
+| `pocket-level Reliable Repair Yield` | 在 phase0 pocket8 / pocket10 局部 receptor 下通过 reliable repair verifier |
+| `full-receptor checked Reliable Repair Yield` | 在 pocket-level 通过后, 再在 full receptor dynamic shell 下无新 severe clash |
+
+当前 pocket10 数据可支持 pocket-level 修复验证; full receptor checked 结果取决于是否能获取并对齐完整蛋白结构.
 
 ---
 

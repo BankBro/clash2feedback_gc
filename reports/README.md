@@ -17,3 +17,19 @@
 - `manual_check_template.csv`
 
 阶段 0 可视化抽查的大图和软件脚本默认放入 `runs/phase0_visual_check/`. 轻量人工检查结论写入 `tmp/YYYYMMDD/phase0-visual-check-notes.md`.
+
+## 3. 阶段 1 报告
+
+`reports/phase1_clash_detector/` 由阶段 1 CLI 生成:
+
+- `summary.json`
+- `clean_clash_report.csv`
+- `balanced_clash_report.csv`
+- `threshold_sensitivity.csv`
+- `rgroup_attribution_report.csv`
+- `failure_type_counts.csv`
+- `verifier_smoke_report.csv`
+- `unsupported_cases.csv`
+- `vdw_radius_table.json`
+
+这些文件是 detector calibration, threshold sensitivity 和 verifier smoke 的运行报告, 不替代 `docs/` 中的方案文档.

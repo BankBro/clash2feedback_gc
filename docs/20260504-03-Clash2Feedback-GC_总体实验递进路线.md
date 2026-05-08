@@ -329,23 +329,67 @@ Score_\alpha(R_k)
 ### 4.5 阶段 1 产出
 
 ```text
+src/clash2feedback/geometry/vdw.py
 src/clash2feedback/geometry/clash.py
-src/clash2feedback/geometry/heatmap.py
+src/clash2feedback/geometry/rgroup_attribution.py
+src/clash2feedback/geometry/clash_types.py
 src/clash2feedback/verifier/repair_verifier.py
 reports/phase1_clash_detector/
 ```
 
-### 4.6 阶段 1 通过标准
+### 4.6 Receptor scope 口径
 
-对人工局部碰撞样本，规则定位应满足：
+阶段 1 detector 必须显式记录 `receptor_scope`. 当前 phase0 主数据的 CrossDocked / IF3 样本通常来自 `*_pocket10.pdb`, 因此阶段 1 默认支持两种局部作用域:
+
+| scope | 来源 | 用途 |
+|---|---|---|
+| `phase0_pocket8` | 阶段 0 从当前 `protein.pdb` 中按 ligand heavy atoms 周围 8 Å 提取的 pocket | old clash diagnosis 和 R-group attribution |
+| `pocket10_all_atoms` | 当前 processed sample 中的 `protein` 全部原子; 当前通常是数据源预裁剪的 pocket10 | repair candidate 的 local new clash check |
+
+`full_receptor_dynamic_shell` 仅作为后续预留作用域. 若后续补齐 full receptor, 可围绕 repaired ligand 当前坐标动态提取 10-12 Å protein shell 做最终检查. Full receptor 不作为阶段 1-3 的 hard dependency; 阶段 4 可作为 shadow check, 阶段 5 可进入 candidate label, 阶段 8 建议作为 final full-receptor checked metric.
+
+### 4.7 Failure type 分类
+
+阶段 1 不只输出是否有 clash, 还应输出 `failure_type`:
+
+| 条件 | failure_type | 第一版动作 |
+|---|---|---|
+| 无 severe clash | `no_clash` | no repair needed |
+| 单个 valid R-group 主导, dominant ratio >= 0.7 | `single_rgroup_clash` | local R-group repair |
+| 0.5 <= dominant ratio < 0.7 | `ambiguous_region_clash` | reject 或 hard split |
+| 多个 R-groups 明显贡献 clash | `multi_region_clash` | 第一版 reject, 后续 expand-mask / sequential repair |
+| scaffold score 最高 | `scaffold_clash` | reject |
+| ligand 多区域整体偏移 | `global_pose_failure` | full resampling 或 reject |
+| covalent / metal / unsupported chemistry | `unsupported_chemistry` | reject |
+
+第一篇主指标聚焦 `single_rgroup_clash`. 其他类型应识别, 统计和单独报告, 不进入 single-R-group repair 主指标.
+
+### 4.8 阶段 1 通过标准
+
+阶段 1 自身不以人工注入样本上的 R-group Top-1 / Top-3 作为关闭条件, 因为人工失败样本来自阶段 2, 规则定位评估属于阶段 3.
+
+阶段 1 关闭条件:
+
+| 指标 | 最低要求 |
+|---|---:|
+| 51 个 clean pool 样本可检测 | 100% |
+| `phase0_balanced_30_v0_1` 可检测 | 100% |
+| 支持 `phase0_pocket8` 和 `pocket10_all_atoms` | 是 |
+| 输出 pair-level clash report | 是 |
+| 输出 R-group attribution report | 是 |
+| 输出 failure type counts | 是 |
+| `δ = 0.3, 0.4, 0.5` sensitivity 已完成 | 是 |
+| clean pool severe false positive | 尽量接近 0, 若非 0 需逐例解释 |
+| verifier clean-vs-clean smoke test | 100% 或逐例解释 |
+| `python -m compileall src scripts` 和 `pytest` | 通过 |
+
+人工注入样本上的规则定位通过标准移动到阶段 3:
 
 | 指标 | 最低要求 |
 |---|---:|
 | dominant ratio 平均值 | > 0.75 |
 | R-group Top-1 | > 70% |
 | R-group Top-3 | > 90% |
-
-如果达不到，不要继续接生成器，应回到阶段 0/2 检查数据拆分和人工注入。
 
 ---
 
@@ -377,6 +421,8 @@ reports/phase1_clash_detector/
 - 连接键不断；
 - R-group 内部几何基本不变；
 - 只改变局部空间占位。
+
+连接键旋转构造的是 controlled synthetic failed pose, 不应表述为真实稳定结合构象. 第一版只应围绕化学上可旋转的 single bond 做 rotation, 并过滤 ligand internal severe clash, 高能不合理构象, multi-region clash 和 scaffold drift. 后续可扩展 torsion perturbation, clash-directed perturbation, fragment replacement 和 model-induced failures.
 
 ### 5.4 保留样本条件
 

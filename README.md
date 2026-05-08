@@ -8,6 +8,8 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 
 阶段 0 收尾采用两层数据口径: `phase0_clean_pool_v0_1` 保留全部 clean samples; `phase0_balanced_30_v0_1` 是从 clean pool 派生的 target-balanced subset, up to 30 samples, 当前 actual n = 28.
 
+阶段 1 方案详见 `docs/20260508-Clash2Feedback-GC_阶段1碰撞检测器与可靠验证器方案.md`. 阶段 1 默认使用 pocket-level receptor scope: `phase0_pocket8` 用于 old clash diagnosis 和 R-group attribution, `pocket10_all_atoms` 用于 local new clash check; full receptor check 为后续阶段可选扩展.
+
 ## 2. 目录结构
 
 | 目录 | 说明 |
@@ -140,6 +142,30 @@ conda run -n c2f_cpu pytest
 
 当前本地 Python 如未安装 RDKit 或 Biopython, 对应化学和结构读取测试会自动跳过.
 
-## 6. 协作说明
+## 6. 阶段 1 用法
+
+运行正式 vdW clash detector, R-group attribution 和 verifier smoke:
+
+```bash
+conda run -n c2f_cpu python scripts/phase1_check_clashes.py \
+  --config configs/phase1_clash_detector.yaml \
+  --manifest data/processed/v0_1/manifest.parquet \
+  --balanced-subset data/splits/v0_1/phase0_balanced_30.txt \
+  --output-root reports/phase1_clash_detector
+```
+
+主要输出:
+
+- `reports/phase1_clash_detector/summary.json`
+- `reports/phase1_clash_detector/clean_clash_report.csv`
+- `reports/phase1_clash_detector/balanced_clash_report.csv`
+- `reports/phase1_clash_detector/threshold_sensitivity.csv`
+- `reports/phase1_clash_detector/rgroup_attribution_report.csv`
+- `reports/phase1_clash_detector/failure_type_counts.csv`
+- `reports/phase1_clash_detector/verifier_smoke_report.csv`
+- `reports/phase1_clash_detector/unsupported_cases.csv`
+- `reports/phase1_clash_detector/vdw_radius_table.json`
+
+## 7. 协作说明
 
 修改仓库前先阅读根目录 `AGENTS.md`. 修改主目录内文件时, 同步阅读该目录下的 `AGENTS.md`.

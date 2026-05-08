@@ -346,6 +346,8 @@ A_t
 | \(\tau_t\) | 修复强度或加噪强度 |
 | \(K_t\) | 本轮候选数 |
 | \(A_t\) | anchor 信息，新局部片段接回骨架的位置 |
+| receptor_scope | 当前诊断和验证使用的 protein / receptor 作用域, 如 `phase0_pocket8`, `pocket10_all_atoms`, `full_receptor_dynamic_shell` |
+| failure_type | `single_rgroup_clash`, `multi_region_clash`, `scaffold_clash`, `global_pose_failure`, `unsupported_chemistry` 等 |
 
 修复动作可以先定义为：
 
@@ -387,6 +389,8 @@ Q_{cost}
 | \(Q_{geom}\) | 配体自身几何是否合法 |
 | \(Q_{pocket}\) | 配体是否仍在蛋白口袋中 |
 | \(Q_{cost}\) | 修改范围是否合理 |
+| receptor_scope | 当前评价使用的 protein / receptor 作用域, 如 `phase0_pocket8`, `pocket10_all_atoms`, `full_receptor_dynamic_shell` |
+| failure_type | 失败类型, 用于区分 single-region 主任务和 reject / unsupported case |
 
 可靠修复定义为：
 
@@ -403,6 +407,8 @@ R(P,L_f,L_r,\mathcal P_t^{eval})=1
 - 配体自身几何合法；
 - 配体仍位于 pocket 中；
 - 修改主要发生在指定 edit region 内。
+
+在 pocket10 数据上, 可靠验证器默认只能声称 pocket-level reliable repair. 若 full receptor 可用, 应在 full receptor dynamic shell 下额外检查 no new severe clash, 并单独报告 full-receptor checked reliable repair.
 
 ---
 
@@ -427,6 +433,17 @@ L = S + \mathcal R
 - R-groups 可以有多个；
 - 第一版优先处理单锚点 R-group；
 - 多锚点 linker、macrocycle、共价配体、金属配合物先标记为 unsupported。
+
+第一篇主任务聚焦 `single-region R-group clash repair`. 也就是说, 主要碰撞贡献应集中在一个 valid single-anchor R-group 上. 对于 multi-region clash, scaffold clash, global pose failure 等情况, 第一版应识别并输出 `reject` 或 `unsupported`, 而不是强行局部修复.
+
+后续扩展路线包括:
+
+| 失败类型 | 后续处理方式 |
+|---|---|
+| ambiguous / multi-region clash | expand-mask repair, top-k R-group edit, sequential repair |
+| scaffold clash | reject 或 full resampling |
+| global pose failure | full resampling 或 docking-level correction |
+| covalent / metal / multi-anchor linker | 特殊 chemistry module 或 unsupported |
 
 拆分的目的不是做完整药物化学定义，而是服务局部修复任务：
 

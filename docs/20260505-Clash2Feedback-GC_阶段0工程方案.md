@@ -51,6 +51,7 @@
 | target / 靶点 | 被配体、药物或其他扰动作用后会影响功能的生物对象 | 样本所属的蛋白、结构域或靶点片段分组, 用于 `target_id` 和 split 防泄漏 |
 | pocket / 口袋 | target 上 ligand 实际结合的局部三维区域 | 从当前 protein 坐标中按 ligand heavy atoms 周围 8 Å 提取的局部 protein atoms / residues |
 | ligand / 配体 | 与 target 或 pocket 结合的小分子 | 当前样本的 `ligand.sdf` 三维构象 |
+| receptor / 受体 | 在 protein-ligand 语境中接纳 ligand 的蛋白结构 | 工程中通常指当前样本用作 ligand 环境的蛋白坐标; 可以是 full receptor, 也可以是数据源预裁剪的 pocket10 局部 receptor |
 
 它们的关系可以理解为:
 
@@ -67,6 +68,8 @@ protein 蛋白质
 - `protein.pdb` 是当前样本实际保存和读取的结构坐标, 可以是完整蛋白, 也可以是数据源预裁剪的局部结构.
 - `pocket` 是从当前 `protein.pdb` 里围绕 ligand 再提取的局部区域, 不是完整 target.
 - 同一个 `target_id` 可以对应多个不同 PDB 结构、不同 ligand-bound 构象和不同 receptor 坐标.
+
+本项目中 `receptor` 和 `protein.pdb` 在多数工程上下文中指同一个坐标输入, 但需要注意: `protein.pdb` 不一定是完整蛋白. 当前 IF3 / CrossDocked pocket10 主数据中, `protein.pdb` 是 ligand 周围约 10 Å 的局部 receptor. 后续若补充 full receptor, 应在 metadata 中单独记录 `full_receptor_path`, `protein_scope` 和 `full_receptor_alignment_status`, 不要混淆 pocket-level 和 full-receptor-level 验证结果.
 
 在当前阶段 0 主数据中, CrossDocked / IF3 样本的 `protein.pdb` 来自 `*_pocket10.pdb`, 即数据源已经围绕 ligand 裁剪出的约 10 Å 局部 receptor 结构. 阶段 0 再从这个局部结构中提取 8 Å pocket:
 
@@ -414,9 +417,14 @@ ProcessedComplexSample = {
     "chain_ids": list[str],
     "ligand_id": str | None,
     "dataset_name": str,
-    "split_group": str
+    "split_group": str,
+    "protein_scope": "pocket10" | "full_receptor" | "unknown",
+    "full_receptor_path": str | None,
+    "full_receptor_alignment_status": str | None
 }
 ```
+
+阶段 0 不强制 full receptor. 若后续阶段 4/5/8 为部分样本补充 full receptor, 应保证 full receptor 与 pocket10 / ligand 坐标系一致, 并将对齐状态写入 metadata 或后续报告.
 
 ### 8.3 protein
 

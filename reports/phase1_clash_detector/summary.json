@@ -1,0 +1,24 @@
+{
+  "schema_version": "phase1_v0_1",
+  "num_clean_pool_samples": 51,
+  "num_balanced_subset_samples": 28,
+  "default_delta_angstrom": 0.4,
+  "delta_sensitivity": [
+    0.3,
+    0.4,
+    0.5
+  ],
+  "receptor_scopes": [
+    "phase0_pocket8",
+    "pocket10_all_atoms"
+  ],
+  "default_old_scope": "phase0_pocket8",
+  "default_new_scope": "pocket10_all_atoms",
+  "full_receptor_enabled": false,
+  "clean_pool_severe_false_positive_count": 0,
+  "balanced_subset_severe_false_positive_count": 0,
+  "verifier_smoke_total_count": 28,
+  "verifier_smoke_pass_count": 28,
+  "num_load_errors": 0,
+  "phase1_acceptance_status": "complete"
+}
