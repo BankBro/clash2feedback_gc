@@ -173,6 +173,7 @@ unbiased CrossDocked subset
 ```text
 visual_check_status = accepted_no_obvious_issue
 manual_check_status = user_visual_scan_completed
+manual_check_counts = pass:15, fail:0, uncertain:0, requires_human_review:0
 ```
 
 已生成便携式 ChimeraX / PyMOL 检查包到本地运行目录:
@@ -217,7 +218,7 @@ chimerax view_ligand.cxc
 
 由于 `runs/phase0_visual_check/` 包含 raw structure 副本和 PNG, 默认不提交 Git. Web 端 ChatGPT 只能看到本文件中的状态摘要, 看不到实际结构图.
 
-2026-05-07 用户已查看本地可视化结果并反馈没有明显问题. 下方 high-priority 表保留为抽查模板和样本索引:
+2026-05-07 用户已查看本地可视化结果并反馈没有明显问题. `tmp/20260507/phase0-visual-check-notes.md` 已将 15 个样本逐项记录为 pass. 下方 high-priority 表保留为样本索引:
 
 | complex_id | target_id | status |
 |---|---|---|

@@ -101,7 +101,7 @@ runs/phase0_visual_check/
 tmp/20260506/phase0-visual-check-notes.md
 ```
 
-2026-05-07 用户已查看 `runs/phase0_visual_check` 下可视化结果, 反馈为没有明显问题. 当前可将 visual check 状态记为 `accepted_no_obvious_issue`; 单样本表仍保留自动生成的待填模板, 未逐项改写为 pass / fail / uncertain.
+2026-05-07 用户已查看 `runs/phase0_visual_check` 下可视化结果, 反馈为没有明显问题. 当前 visual check 状态为 `accepted_no_obvious_issue`; `tmp/20260507/phase0-visual-check-notes.md` 已将 15 个样本逐项记录为 pass. 计数为 pass=15, fail=0, uncertain=0, requires_human_review=0.
 
 因此, 阶段 0 工程和人工初筛均已满足进入阶段 1 的要求. 仍需在后续报告中说明这些图片只用于人工初筛, 不替代阶段 1 正式 clash detector.
 

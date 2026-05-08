@@ -90,7 +90,7 @@
 - train / val / test split 已固定.
 - `phase0_balanced_30_v0_1` 已生成, actual n = 28.
 - ChimeraX 批量渲染图已生成, `render_manifest.csv` 中 864 个任务全部 `rendered`.
-- 用户已查看 `runs/phase0_visual_check` 下可视化结果, 未发现明显问题.
+- 用户已查看 `runs/phase0_visual_check` 下可视化结果, 15 个样本逐项记录为 pass, 未发现明显问题.
 - `conda run -n c2f_cpu pytest` 结果: 32 passed.
 
 关键分布:
