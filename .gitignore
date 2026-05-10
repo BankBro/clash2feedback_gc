@@ -19,6 +19,8 @@ data/processed/*/manifest.parquet
 data/processed/*/schema.json
 data/splits/*/*.txt
 data/splits/*/split_report.csv
+data/benchmarks/*/v*/samples/*.pkl
+data/benchmarks/*/v*/ligands/*.sdf
 reports/phase0/*.csv
 reports/phase0/*.json
 runs/phase0_visual_check/

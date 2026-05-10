@@ -37,3 +37,24 @@
 - `phase1_final_report.md`
 
 这些文件是 detector calibration, threshold sensitivity 和 verifier smoke 的运行报告, 不替代 `docs/` 中的方案文档.
+
+## 4. 阶段 2 报告
+
+`reports/phase2_injection/` 由阶段 2 CLI 生成:
+
+- `summary.json`
+- `injection_attempts.csv`
+- `base_clean_filter_report.csv`
+- `supported_single_rgroup_cases.csv`
+- `reject_cases.csv`
+- `invalid_conformer_cases.csv`
+- `unsupported_cases.csv`
+- `duplicate_cases.csv`
+- `near_miss_cases.csv`
+- `delta_sensitivity.csv`
+- `difficulty_bins.csv`
+- `visual_qc_cases.csv`
+- `visual_qc_notes.md`
+- `phase2_completion_audit.md`
+
+这些报告记录 artificial R-group clash benchmark 的构造尝试, split 统计, 数据质量 gates, visual QC 抽样和最终审计结果.

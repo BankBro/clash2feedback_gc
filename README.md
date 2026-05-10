@@ -10,6 +10,8 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 
 阶段 1 方案详见 `docs/20260508-Clash2Feedback-GC_阶段1碰撞检测器与可靠验证器方案.md`. 阶段 1 默认使用 pocket-level receptor scope: `phase0_pocket8` 用于 old clash diagnosis 和 R-group attribution, `pocket10_all_atoms` 用于 local new clash check; full receptor check 为后续阶段可选扩展.
 
+阶段 2 方案详见 `docs/20260510-Clash2Feedback-GC_阶段2人工局部碰撞注入最终落地方案.md`. 阶段 2 构建 controlled synthetic failed pose benchmark, 不调用生成器, 不做 repair, 不做 whole protein-ligand complex minimization; 主评估集只使用 `supported_single_rgroup`.
+
 ## 2. 目录结构
 
 | 目录 | 说明 |
@@ -21,7 +23,7 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 | `runs/` | 日志, checkpoint, 生成候选等较重运行产物 |
 | `src/clash2feedback/` | 可复用 Python 包源码 |
 | `scripts/` | 阶段命令行入口 |
-| `tests/` | 阶段 0 自动化测试 |
+| `tests/` | 自动化测试 |
 | `tmp/` | 按日期归档的临时文件, 中间脚本和一次性输出 |
 
 ## 3. 统一约定
@@ -137,7 +139,8 @@ conda run -n c2f_cpu python scripts/phase0_render_visual_check_images.py \
 ## 5. 测试
 
 ```bash
-conda run -n c2f_cpu pytest
+conda run -n c2f_cpu python -m compileall src scripts
+conda run -n c2f_cpu python -m pytest
 ```
 
 当前本地 Python 如未安装 RDKit 或 Biopython, 对应化学和结构读取测试会自动跳过.
@@ -169,6 +172,31 @@ conda run -n c2f_cpu python scripts/phase1_check_clashes.py \
 - `reports/phase1_clash_detector/nonsevere_contact_stats.csv`
 - `reports/phase1_clash_detector/scope_comparison.csv`
 
-## 7. 协作说明
+## 7. 阶段 2 用法
+
+运行人工局部碰撞注入 benchmark 构建:
+
+```bash
+conda run -n c2f_cpu python scripts/phase2_inject_artificial_clashes.py \
+  --config configs/phase2_injection.yaml \
+  --manifest data/processed/v0_1/manifest.parquet \
+  --phase1-report-root reports/phase1_clash_detector \
+  --output-root data/benchmarks/clashrepairbench_rg_artificial/v0_1 \
+  --report-root reports/phase2_injection
+```
+
+主要输出:
+
+- `data/benchmarks/clashrepairbench_rg_artificial/v0_1/manifest.parquet`
+- `data/benchmarks/clashrepairbench_rg_artificial/v0_1/schema.json`
+- `data/benchmarks/clashrepairbench_rg_artificial/v0_1/samples/*.pkl`
+- `data/benchmarks/clashrepairbench_rg_artificial/v0_1/ligands/*_original.sdf`
+- `data/benchmarks/clashrepairbench_rg_artificial/v0_1/ligands/*_failed.sdf`
+- `reports/phase2_injection/summary.json`
+- `reports/phase2_injection/phase2_completion_audit.md`
+
+`predicted_dominant_*` 字段只记录阶段 1 attribution 结果, 不作为阶段 2 主集保留条件. 所有 injected variants 继承 base complex split.
+
+## 8. 协作说明
 
 修改仓库前先阅读根目录 `AGENTS.md`. 修改主目录内文件时, 同步阅读该目录下的 `AGENTS.md`.

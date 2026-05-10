@@ -1,0 +1,85 @@
+schema_version: "phase2_v0_1"
+seed: 20260510
+
+inputs:
+  processed_root: "data/processed/v0_1"
+  manifest: "data/processed/v0_1/manifest.parquet"
+  splits_root: "data/splits/v0_1"
+  phase1_report_root: "reports/phase1_clash_detector"
+
+outputs:
+  benchmark_root: "data/benchmarks/clashrepairbench_rg_artificial/v0_1"
+  report_root: "reports/phase2_injection"
+
+base_filter:
+  require_analysis_status_ok: true
+  require_no_severe_phase0_pocket8: true
+  require_no_severe_pocket10_all_atoms: true
+  require_unsupported_false: true
+  min_valid_rgroups: 1
+  min_single_anchor_rgroups: 1
+
+injection:
+  modes:
+    - easy_rotation
+    - torsion_perturb
+    - directed_clash
+  easy_rotation_angles_deg: [60, 120, 180, 240, 300]
+  torsion_angles_deg: [60, 120, 180, 240, 300]
+  directed_rotation_angles_deg: [30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
+  max_attempts_per_rgroup: 8
+  max_accepted_per_base_sample: 5
+
+chemistry:
+  require_rdkit_sanitize: true
+  require_rotatable_anchor_bond: true
+  reject_ring_bond: true
+  reject_double_bond: true
+  reject_aromatic_bond: true
+  reject_amide_like_bond: true
+  reject_conjugated_bond: true
+  require_chirality_preserved: true
+  use_energy_delta_filter: true
+  forcefield_preference: ["MMFF", "UFF"]
+  energy_delta_threshold_mode: "record_only"
+
+geometry:
+  scaffold_rmsd_threshold: 0.3
+  non_target_rmsd_threshold: 0.5
+  anchor_bond_length_delta_threshold: 0.05
+  bond_length_delta_threshold: 0.05
+  ligand_internal_delta_angstrom: 0.4
+  ligand_internal_severe_depth_threshold_angstrom: 0.4
+  ligand_internal_severe_clash_allowed: 0
+
+detector:
+  default_delta_angstrom: 0.4
+  delta_sensitivity: [0.3, 0.4, 0.5]
+  severe_depth_threshold_angstrom: 0.4
+  old_scope: "phase0_pocket8"
+  new_scope: "pocket10_all_atoms"
+  rgroup_score_alpha: 0.5
+  single_region_dominant_ratio: 0.7
+  ambiguous_region_dominant_ratio: 0.5
+
+acceptance:
+  min_target_severe_pairs: 1
+  min_target_score_ratio_valid: 0.7
+  max_scaffold_severe_pairs: 0
+  max_non_target_severe_pairs: 0
+  max_clash_depth_angstrom: 1.5
+
+splitting:
+  inherit_base_split: true
+  group_by: "split_group"
+
+deduplicate:
+  enabled: true
+  coords_rmsd_threshold: 0.1
+  require_same_top_residue: true
+  require_same_failure_type: true
+
+visual_qc:
+  num_supported_cases: 10
+  num_reject_cases: 5
+  num_invalid_cases: 5

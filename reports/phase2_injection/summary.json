@@ -1,0 +1,35 @@
+{
+  "schema_version": "phase2_v0_1",
+  "num_base_clean_samples": 51,
+  "num_base_total_samples": 51,
+  "num_attempts": 2610,
+  "num_accepted_supported": 357,
+  "num_reject": 50,
+  "num_invalid_conformer": 601,
+  "num_unsupported": 85,
+  "num_duplicates_removed": 739,
+  "num_near_miss_contact": 778,
+  "oracle_split_counts": {
+    "near_miss_contact": 778,
+    "duplicate_removed": 739,
+    "invalid_conformer": 601,
+    "supported_single_rgroup": 357,
+    "unsupported": 85,
+    "global_pose_failure": 48,
+    "ambiguous_region": 2
+  },
+  "default_delta_angstrom": 0.4,
+  "delta_sensitivity": [
+    0.3,
+    0.4,
+    0.5
+  ],
+  "injection_modes": [
+    "easy_rotation",
+    "torsion_perturb",
+    "directed_clash"
+  ],
+  "phase1_report_root": "/home/lyj/mnt/project/clash2feedback_gc/reports/phase1_clash_detector",
+  "phase2_acceptance_status": "complete",
+  "visual_qc_status": "pending_manual_review"
+}

@@ -33,3 +33,16 @@ python scripts/phase1_check_clashes.py \
 ```
 
 `phase1_check_clashes.py` 读取阶段 0 clean pool 和 balanced subset, 生成正式 vdW clash detector, R-group attribution, delta sensitivity, per-scope summary, strict-delta case report, non-severe contact stats, scope comparison 和 verifier clean-vs-clean smoke 报告. 阶段 1 不做人为注入, 不接生成器, 不强制 full receptor.
+
+## 4. 阶段 2 命令
+
+```bash
+python scripts/phase2_inject_artificial_clashes.py \
+  --config configs/phase2_injection.yaml \
+  --manifest data/processed/v0_1/manifest.parquet \
+  --phase1-report-root reports/phase1_clash_detector \
+  --output-root data/benchmarks/clashrepairbench_rg_artificial/v0_1 \
+  --report-root reports/phase2_injection
+```
+
+`phase2_inject_artificial_clashes.py` 从阶段 0/1 clean base pose 出发, 枚举合法 single-anchor target R-group, 执行 `easy_rotation`, `torsion_perturb`, `directed_clash`, 复用阶段 1 detector / attribution 分配 oracle split, 并输出 benchmark, reports 和 completion audit. 阶段 2 不调用生成器, 不做 repair, 不做 whole complex minimization.

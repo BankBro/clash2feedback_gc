@@ -9,7 +9,8 @@
 - `raw_complexes/complex_xxxxxx/`: 原始 `protein.pdb` 或 `protein.cif`, `ligand.sdf`, 可选 `metadata.json`.
 - `processed/v0_1/`: 阶段 0 clean sample, manifest 和 schema.
 - `splits/v0_1/`: train, val, test 划分, `split_report.csv` 和派生 benchmark 清单, 例如 `phase0_balanced_30.txt`.
-- `benchmarks/`: 后续失败样本基准.
+- `benchmarks/clashrepairbench_rg_artificial/v0_1/`: 阶段 2 controlled synthetic failed pose benchmark, 包含 manifest, schema, samples 和 original/failed ligand SDF.
+- `benchmarks/model_induced/v0_1/`: 后续 model-induced failure benchmark 预留位置.
 - `candidate_pools/`: 后续候选池.
 - `cache/`: 可删除缓存, 包括 HF 镜像下载的 CrossDocked 小子集文件.
 

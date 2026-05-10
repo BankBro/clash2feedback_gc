@@ -397,7 +397,9 @@ reports/phase1_clash_detector/
 
 ### 5.1 目标
 
-构建带真实失败区域标签的数据集，用于验证规则定位器和训练纠错器。
+阶段 2 构建带真实 target R-group 标签的 controlled synthetic failed pose benchmark。它从阶段 1 验收过的 clean protein-ligand pose 出发，只扰动一个合法 target R-group，构造 ligand 自身合理、但 target R-group 与 protein 发生 severe clash 的失败样本。
+
+阶段 2 不训练模型、不调用生成器、不做 repair、不做 whole protein-ligand complex minimization。其目标是造数据，而不是证明修复成功。最终执行口径详见 `docs/20260510-Clash2Feedback-GC_阶段2人工局部碰撞注入最终落地方案.md`。
 
 ### 5.2 输入
 
@@ -409,11 +411,11 @@ reports/phase1_clash_detector/
 
 ### 5.3 注入方式
 
-第一版优先使用连接键旋转：
+第一版按优先级实现三种受控扰动：
 
-\[
-\theta \in \{60^\circ,120^\circ,180^\circ,240^\circ,300^\circ}\}
-\]
+1. `easy_rotation`：围绕合法 scaffold-R-group anchor bond 旋转 target R-group；
+2. `torsion_perturb`：扰动 target R-group 内部可旋转键，固定 scaffold 和 anchor；
+3. `directed_clash`：朝 protein hotspot 方向定向扰动，用于构造 mild / medium / severe 难度。
 
 要求：
 
@@ -422,29 +424,54 @@ reports/phase1_clash_detector/
 - R-group 内部几何基本不变；
 - 只改变局部空间占位。
 
-连接键旋转构造的是 controlled synthetic failed pose, 不应表述为真实稳定结合构象. 第一版只应围绕化学上可旋转的 single bond 做 rotation, 并过滤 ligand internal severe clash, 高能不合理构象, multi-region clash 和 scaffold drift. 后续可扩展 torsion perturbation, clash-directed perturbation, fragment replacement 和 model-induced failures.
+连接键旋转构造的是 controlled synthetic failed pose, 不应表述为真实稳定结合构象. 第一版只应围绕化学上可旋转的 single bond 或合法内部 torsion 做扰动, 并过滤 ligand internal severe clash, 高能不合理构象, multi-region clash 和 scaffold drift. `fragment_replace`, `hard_multi_region` 和 bulky replacement 暂缓到 phase2b。
 
 ### 5.4 保留样本条件
 
-| 条件 | 阈值 |
+| 条件 | 阈值 / 要求 |
 |---|---:|
+| RDKit sanitize | pass |
+| anchor bond | 合法 rotatable single bond |
+| ligand internal severe clash | 0 |
+| anchor integrity | pass |
 | scaffold RMSD | < 0.3 Å |
 | 非扰动区域 RMSD | < 0.5 Å |
-| 目标 R-group clash score / 总 clash score | > 0.7 |
-| 分子内部严重碰撞 | 无 |
+| target score ratio valid | >= 0.7 |
 | protein-ligand severe clash | 至少 1 个 |
+| scaffold severe pairs | 0 |
+| non-target severe pairs | 0 |
+| max clash depth | 第一版建议 <= 1.5 Å |
 
-### 5.5 阶段 2 产出
+RDKit MMFF / UFF 只能作为 ligand-only energy delta 粗筛, 不用于优化 protein-ligand complex。
+
+### 5.5 阶段 2 split
+
+阶段 2 产出分层：
+
+| split | 用途 |
+|---|---|
+| `supported_single_rgroup` | 阶段 3 Top-1 / Top-3 主评估 |
+| `ambiguous_region` | hard / reject split |
+| `multi_region` | reject split |
+| `scaffold_clash` | reject split |
+| `global_pose_failure` | reject split |
+| `near_miss_contact` | 不进主集 |
+| `invalid_conformer` | ligand 自身不合理, 丢弃但统计 |
+| `unsupported` | 化学或 mask 不支持 |
+| `duplicate_removed` | 重复样本, 不进主集 |
+
+### 5.6 阶段 2 产出
 
 ```text
 data/benchmarks/clashrepairbench_rg_artificial/v0_1/
-  samples/
-    sample_000001.pkl
-    sample_000002.pkl
   manifest.parquet
+  schema.json
+  samples/
+  ligands/
 reports/phase2_injection/
-  injection_report.csv
   summary.json
+  injection_attempts.csv
+  phase2_completion_audit.md
 ```
 
 每个样本包含：
@@ -1031,7 +1058,7 @@ clash2feedback_gc/
   configs/
     phase0.yaml
     phase1.yaml
-    phase2.yaml
+    phase2_injection.yaml
     phase3.yaml
     phase4.yaml
     phase5.yaml

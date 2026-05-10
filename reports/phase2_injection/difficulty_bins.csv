@@ -1,0 +1,11 @@
+difficulty_bin,oracle_split,count
+easy,duplicate_removed,63
+easy,supported_single_rgroup,239
+hard,ambiguous_region,2
+hard,duplicate_removed,631
+hard,global_pose_failure,48
+hard,near_miss_contact,778
+invalid,invalid_conformer,601
+medium,duplicate_removed,45
+medium,supported_single_rgroup,118
+unsupported,unsupported,85

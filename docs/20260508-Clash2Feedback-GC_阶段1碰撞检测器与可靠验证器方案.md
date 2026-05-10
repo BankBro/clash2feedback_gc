@@ -1037,6 +1037,9 @@ repair_verifier
 6. 第一版 \(\delta=0.4\) 使用统一容忍余量，pair-specific \(\delta_{ij}\) 后续再做；
 7. multi-region / scaffold / global pose failure 第一版识别并 reject，不进入 single-R-group repair 主指标；
 8. 人工 rotation injection 构造的是 controlled synthetic failed pose，不应表述为真实稳定结合构象。
+9. 阶段 2 调用阶段 1 detector / attribution 的用途是判断人工扰动后是否产生 protein-ligand severe clash, 记录 target / non-target / scaffold clash scores, 并记录 predicted dominant region; predicted dominant == target 不能作为唯一保留条件。
+10. 阶段 2 不做 whole protein-ligand complex minimization。RDKit MMFF / UFF 可作为 ligand-only energy delta filter, 用于排除 ligand 自身极端不合理构象, 但不用于消除人工注入的 protein-ligand clash。
+11. 阶段 2 可准备 verifier preflight: no-repair negative 应 fail, oracle repair synthetic failed -> original clean 应 pass, wrong-region repair 应 fail; 这不等同于阶段 4 真实 repair candidate 验证。
 
 ---
 

@@ -199,7 +199,7 @@ clash2feedback_gc/
   configs/
     phase0.yaml
     phase1.yaml
-    phase2.yaml
+    phase2_injection.yaml
     phase3.yaml
     phase4.yaml
     phase5.yaml

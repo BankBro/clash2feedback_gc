@@ -357,6 +357,8 @@ L=S+\mathcal R
 
 注意: anchor bond rotation 构造的是 controlled synthetic failed pose, 用于建立标签清楚的局部碰撞样本, 主要服务 detector, locator 和 verifier 的早期验证. 它不应被表述为真实热力学稳定结合构象.
 
+第一版 rotation / torsion injection 之后, 必须做 ligand-only 合理性检查: RDKit sanitize pass, anchor bond 是合法 rotatable single bond, ligand internal severe clash = 0, anchor integrity pass, chirality preserved, 可选记录 RDKit MMFF / UFF energy delta. MMFF / UFF 仅作为 ligand-only energy filter, 不作为生成或修复方法, 也不用于 whole complex minimization。
+
 第一版 rotation injection 只允许围绕化学上可旋转的 single bond 进行. 以下情况应排除或标记 unsupported:
 
 - ring bond；
@@ -385,8 +387,8 @@ L=S+\mathcal R
 | `easy_rotation` | single R-group anchor bond rotation | detector / locator debug 和基础主集 |
 | `torsion_perturb` | 目标 R-group 内部 rotatable bond 扰动 | 更接近局部构象错误 |
 | `directed_clash` | 朝 protein hotspot 方向定向扰动 | 构造 mild / medium / severe 难度 |
-| `fragment_replace` | 合法 R-group 替换 | 更接近“取代基太大导致 clash” |
-| `hard_multi_region` | 多 R-group 或模糊失败区域 | stress test / reject test |
+| `fragment_replace` | phase2b 暂缓 | 更接近“取代基太大导致 clash” |
+| `hard_multi_region` | phase2b 暂缓 | stress test / reject test |
 
 第一篇主结果可以聚焦 `single-region dominant` 样本; hard split 应单独报告, 不应混入主指标.
 
@@ -394,10 +396,22 @@ L=S+\mathcal R
 
 ## 9. 人工失败样本保留条件
 
-人工失败样本必须满足：
+人工失败样本主集 `supported_single_rgroup` 必须满足：
 
 \[
 \text{LigandValid}=1
+\]
+
+\[
+\text{LigandInternalValid}=1
+\]
+
+\[
+\text{AnchorIntegrity}=1
+\]
+
+\[
+\text{EnergyDeltaOK}=1\ \text{或 unavailable-recorded}
 \]
 
 \[
@@ -422,6 +436,8 @@ L=S+\mathcal R
 | 分子内部严重碰撞 | 无 |
 | protein-ligand severe clash | 至少 1 个 |
 | R-group 重原子数 | 2–15 |
+
+人工失败集不只保存 supported / hard split, 还应保存 `invalid_conformer`, `near_miss_contact`, `duplicate_removed` 和 `unsupported`, 这些不进入主评估集, 但必须统计原因。阶段 2 benchmark construction 不得使用 predicted dominant R-group 是否等于 target R-group 作为唯一保留条件, 所有 injected variants 必须继承 base complex split。
 
 ---
 
@@ -891,7 +907,7 @@ clash2feedback_gc/
   configs/
     phase0.yaml
     phase1.yaml
-    phase2.yaml
+    phase2_injection.yaml
     phase3.yaml
     phase4.yaml
     phase5.yaml

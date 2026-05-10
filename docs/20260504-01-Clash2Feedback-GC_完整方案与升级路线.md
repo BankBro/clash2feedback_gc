@@ -500,6 +500,22 @@ L = S + \mathcal R
 | 人工注入局部碰撞集 | `data/benchmarks/clashrepairbench_rg_artificial/v0_1/` | 有真实失败区域标签，用于训练和评估诊断头 |
 | 生成器诱导失败集 | `data/benchmarks/model_induced/v0_1/` | 更接近真实生成失败，用于最终验证 |
 
+人工注入局部碰撞集是 controlled synthetic failed pose benchmark, 不是热力学稳定结合构象证明。第一版按如下 split 保存:
+
+| split | 含义 |
+|---|---|
+| `supported_single_rgroup` | target R-group 单区域主导, 阶段 3 主评估集 |
+| `ambiguous_region` | target 有 clash, 但区域不够单一 |
+| `multi_region` | 多个 R-groups 同时 severe |
+| `scaffold_clash` | scaffold 发生 severe clash |
+| `global_pose_failure` | 多区域整体失败 |
+| `near_miss_contact` | 接近但未 severe |
+| `invalid_conformer` | ligand 自身构象不合理 |
+| `unsupported` | 化学或 mask 不支持 |
+| `duplicate_removed` | 重复样本 |
+
+阶段 2 不调用生成器, 不做 repair, 不做 whole complex minimization; predicted `dominant_region` 只记录, 不作为主集唯一保留条件。所有 injected variants 必须继承 base complex 的 split。
+
 ---
 
 ## 14. 数据来源与清洗原则
@@ -691,7 +707,7 @@ clash2feedback_gc/
   configs/
     phase0.yaml
     phase1.yaml
-    phase2.yaml
+    phase2_injection.yaml
     phase3.yaml
     phase4.yaml
     phase5.yaml
