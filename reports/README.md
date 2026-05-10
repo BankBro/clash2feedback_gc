@@ -34,5 +34,6 @@
 - `strict_delta_false_positive_cases.csv`
 - `nonsevere_contact_stats.csv`
 - `scope_comparison.csv`
+- `phase1_final_report.md`
 
 这些文件是 detector calibration, threshold sensitivity 和 verifier smoke 的运行报告, 不替代 `docs/` 中的方案文档.
