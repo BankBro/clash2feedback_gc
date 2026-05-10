@@ -61,6 +61,8 @@ def test_clean_vs_clean_passes() -> None:
     assert result["repair_pass"] is True
     assert result["old_clash_resolved"] is True
     assert result["no_new_severe_clash"] is True
+    assert result["coordinate_valid"] is True
+    assert result["old_pair_resolved_fraction"] == 1.0
 
 
 def test_repaired_coords_with_new_clash_fail() -> None:
@@ -71,6 +73,7 @@ def test_repaired_coords_with_new_clash_fail() -> None:
     result = verify_repair(sample, failed, repaired, edit_region="R1", config=_config())
     assert result["repair_pass"] is False
     assert result["no_new_severe_clash"] is False
+    assert result["new_severe_pair_created_count"] > 0
     assert "new_severe_clash" in result["failure_reasons"]
 
 
@@ -94,3 +97,14 @@ def test_non_edit_drift_fails() -> None:
     assert result["repair_pass"] is False
     assert result["non_edit_stable"] is False
     assert "non_edit_drift" in result["failure_reasons"]
+
+
+def test_old_pair_remaining_is_tracked() -> None:
+    sample = _sample()
+    failed = sample["ligand"]["coords"].copy()
+    failed[2] = np.asarray([2.5, 0.0, 0.0], dtype=np.float32)
+    result = verify_repair(sample, failed, failed, edit_region="R1", config=_config())
+    assert result["repair_pass"] is False
+    assert result["old_pair_count_before"] > 0
+    assert result["old_pair_remaining_count"] > 0
+    assert result["old_severe_pair_remaining_count"] > 0

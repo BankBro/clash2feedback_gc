@@ -32,4 +32,4 @@ python scripts/phase1_check_clashes.py \
   --output-root reports/phase1_clash_detector
 ```
 
-`phase1_check_clashes.py` 读取阶段 0 clean pool 和 balanced subset, 生成正式 vdW clash detector, R-group attribution, delta sensitivity 和 verifier clean-vs-clean smoke 报告. 阶段 1 不做人为注入, 不接生成器, 不强制 full receptor.
+`phase1_check_clashes.py` 读取阶段 0 clean pool 和 balanced subset, 生成正式 vdW clash detector, R-group attribution, delta sensitivity, per-scope summary, strict-delta case report, non-severe contact stats, scope comparison 和 verifier clean-vs-clean smoke 报告. 阶段 1 不做人为注入, 不接生成器, 不强制 full receptor.

@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 
 from clash2feedback.geometry.clash_types import ClashPair, ClashReport
-from clash2feedback.geometry.rgroup_attribution import ligand_atom_regions
+from clash2feedback.geometry.rgroup_attribution import ligand_atom_regions, ligand_region_warnings
 from clash2feedback.geometry.vdw import get_vdw_radius, normalize_element
 
 
@@ -23,6 +23,32 @@ ATOMIC_NUMBER_TO_ELEMENT = {
     53: "I",
 }
 WATER_NAMES = {"HOH", "WAT", "H2O"}
+METAL_OR_COFACTOR_ATOMIC_NUMBERS = {
+    3,
+    4,
+    11,
+    12,
+    13,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    47,
+    48,
+    50,
+    56,
+    78,
+    79,
+    80,
+}
 
 
 def detect_clashes(
@@ -41,11 +67,19 @@ def detect_clashes(
             delta_angstrom,
             severe_depth_threshold_angstrom,
             ["full_receptor_dynamic_shell_not_available"],
+            analysis_status="unsupported_scope",
         )
 
     unsupported_reasons = _metadata_unsupported_reasons(sample)
     if "unsupported_covalent_ligand" in unsupported_reasons:
-        return _empty_report(sample_id, receptor_scope, delta_angstrom, severe_depth_threshold_angstrom, unsupported_reasons)
+        return _empty_report(
+            sample_id,
+            receptor_scope,
+            delta_angstrom,
+            severe_depth_threshold_angstrom,
+            unsupported_reasons,
+            analysis_status=_analysis_status(unsupported_reasons),
+        )
 
     ligand = sample.get("ligand", {})
     protein = sample.get("protein", {})
@@ -56,6 +90,7 @@ def detect_clashes(
 
     receptor_indices = _receptor_atom_indices(sample, receptor_scope)
     receptor_positions = np.arange(receptor_indices.shape[0], dtype=np.int64)
+    unsupported_reasons.extend(ligand_region_warnings(sample))
     ligand_indices, ligand_elements, ligand_radii, ligand_reasons = _selected_ligand_atoms(ligand)
     protein_indices, protein_positions, protein_elements, protein_radii, protein_reasons = _selected_protein_atoms(
         protein,
@@ -72,6 +107,7 @@ def detect_clashes(
             delta_angstrom,
             severe_depth_threshold_angstrom,
             sorted(set(unsupported_reasons)),
+            analysis_status=_analysis_status(unsupported_reasons),
         )
 
     ligand_regions = ligand_atom_regions(sample)
@@ -132,14 +168,19 @@ def detect_clashes(
         mean_clash_depth=float(depth_sum / len(clash_pairs)) if clash_pairs else 0.0,
         clash_pairs=clash_pairs,
         unsupported_reasons=sorted(set(unsupported_reasons)),
+        analysis_status=_analysis_status(unsupported_reasons),
     )
     return report.to_dict()
 
 
 def _metadata_unsupported_reasons(sample: dict[str, Any]) -> list[str]:
     metadata = sample.get("metadata", {})
+    protein = sample.get("protein", {})
     if metadata.get("is_covalent_ligand") or metadata.get("covalent"):
         return ["unsupported_covalent_ligand"]
+    atomic_numbers = [int(value) for value in protein.get("atomic_numbers", [])]
+    if any(number in METAL_OR_COFACTOR_ATOMIC_NUMBERS for number in atomic_numbers):
+        return ["unsupported_metal_or_cofactor"]
     return []
 
 
@@ -181,7 +222,10 @@ def _selected_ligand_atoms(ligand: dict[str, Any]) -> tuple[np.ndarray, np.ndarr
         if atomic_number <= 1:
             continue
         if atomic_number not in SUPPORTED_ATOMIC_NUMBERS:
-            unsupported.append(f"unsupported_ligand_element:{_element_value(elements, atomic_numbers, atom_idx)}")
+            if atomic_number in METAL_OR_COFACTOR_ATOMIC_NUMBERS:
+                unsupported.append(f"unsupported_metal:{_element_value(elements, atomic_numbers, atom_idx)}")
+            else:
+                unsupported.append(f"unsupported_ligand_element:{_element_value(elements, atomic_numbers, atom_idx)}")
             continue
         try:
             element = _normalized_atom_element(elements, atomic_numbers, atom_idx)
@@ -222,7 +266,10 @@ def _selected_protein_atoms(
         if atom_idx < is_hetero.shape[0] and bool(is_hetero[atom_idx]):
             continue
         if atomic_number not in SUPPORTED_ATOMIC_NUMBERS:
-            unsupported.append(f"unsupported_protein_element:{_element_value(elements, atomic_numbers, atom_idx)}")
+            if atomic_number in METAL_OR_COFACTOR_ATOMIC_NUMBERS:
+                unsupported.append(f"unsupported_metal:{_element_value(elements, atomic_numbers, atom_idx)}")
+            else:
+                unsupported.append(f"unsupported_protein_element:{_element_value(elements, atomic_numbers, atom_idx)}")
             continue
         try:
             element = _normalized_atom_element(elements, atomic_numbers, atom_idx)
@@ -280,7 +327,9 @@ def _empty_report(
     delta_angstrom: float,
     severe_depth_threshold_angstrom: float,
     unsupported_reasons: list[str] | None = None,
+    analysis_status: str | None = None,
 ) -> dict[str, Any]:
+    reasons = sorted(set(unsupported_reasons or []))
     return ClashReport(
         sample_id=sample_id,
         receptor_scope=receptor_scope,
@@ -292,5 +341,20 @@ def _empty_report(
         max_clash_depth=0.0,
         mean_clash_depth=0.0,
         clash_pairs=[],
-        unsupported_reasons=sorted(set(unsupported_reasons or [])),
+        unsupported_reasons=reasons,
+        analysis_status=analysis_status or _analysis_status(reasons),
     ).to_dict()
+
+
+def _analysis_status(unsupported_reasons: list[str]) -> str:
+    if not unsupported_reasons:
+        return "ok"
+    if any("covalent" in reason or "metal" in reason for reason in unsupported_reasons):
+        return "unsupported_chemistry"
+    if any(reason.startswith("unsupported_mask") for reason in unsupported_reasons):
+        return "unsupported_mask"
+    if any("unsupported_ligand_element" in reason or "unsupported_protein_element" in reason for reason in unsupported_reasons):
+        return "partial_due_to_unsupported_atoms"
+    if any(reason.startswith("full_receptor_dynamic_shell") for reason in unsupported_reasons):
+        return "unsupported_scope"
+    return "partial_due_to_unsupported_atoms"

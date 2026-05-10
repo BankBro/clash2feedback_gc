@@ -139,6 +139,25 @@ c_{ij}=\max(0,\ r_i^{vdW}+r_j^{vdW}-\delta-d_{ij})
 severe_depth_threshold = 0.4 Å
 ```
 
+也可以先写成 raw vdW overlap:
+
+\[
+o_{ij}=r_i^{vdW}+r_j^{vdW}-d_{ij}
+\]
+
+\[
+c_{ij}=\max(0,\ o_{ij}-\delta)
+\]
+
+因此默认设置下:
+
+```text
+clash pair: raw vdW overlap > 0.4 Å
+severe clash: raw vdW overlap >= 0.8 Å
+```
+
+这避免把 `δ = 0.4 Å` 误读成“0.4 Å raw overlap 就是 severe clash”. `δ` 是容忍余量, severe threshold 是在扣除容忍余量后的 clash depth 阈值.
+
 同时必须输出敏感性分析：
 
 ```text
@@ -374,9 +393,18 @@ repaired_ligand_coords = clean ligand coords
   "scaffold_stable": bool,
   "non_edit_rmsd": float,
   "non_edit_stable": bool,
+  "coordinate_valid": bool,
   "geometry_valid": bool,
   "edit_compliance": bool,
   "pocket_retention": bool,
+  "old_pair_count_before": int,
+  "old_pair_count_after": int,
+  "old_pair_remaining_count": int,
+  "old_pair_resolved_fraction": float,
+  "new_pair_created_count": int,
+  "new_pair_created_regions": list[str],
+  "old_severe_pair_remaining_count": int,
+  "new_severe_pair_created_count": int,
   "repair_pass": bool,
   "failure_reasons": list[str],
   "receptor_scope_old": str,
@@ -394,10 +422,13 @@ repaired_ligand_coords = clean ligand coords
 | no new severe clash | repaired severe clash count = 0 |
 | scaffold stable | scaffold RMSD < 0.5 Å |
 | non-edit stable | non-edit RMSD < 0.8 Å |
-| geometry valid | RDKit sanitize + 基础键长/坐标检查通过 |
+| coordinate valid | 坐标 shape 一致且为有限数 |
+| geometry valid | 阶段 1 先等同于 coordinate valid; RDKit sanitize, 键长, 价态和 ligand internal clash 是阶段 2/4 升级 |
 | edit compliance | edit region 外修改比例 < 20% |
 | pocket retention | ligand 仍在 pocket 附近；第一版可先做 min distance / contact count smoke |
 | unsupported case | covalent / metal / scaffold clash / multi-region 可标记 fail 或 unsupported |
+
+阶段 1 当前实现提供 coordinate-level geometry validity, 用于 clean-vs-clean smoke test. 除非显式实现更完整的 geometry checks, 不应把阶段 1 的 `geometry_valid` 解读为完整分子化学合法性.
 
 ### 5.4 old clash 和 new clash 的区别
 
@@ -741,6 +772,9 @@ failure_type_counts.csv
 verifier_smoke_report.csv
 unsupported_cases.csv
 vdw_radius_table.json
+strict_delta_false_positive_cases.csv
+nonsevere_contact_stats.csv
+scope_comparison.csv
 ```
 
 ### 10.1 `clean_clash_report.csv`
@@ -757,8 +791,12 @@ num_clash_pairs
 num_severe_clash_pairs
 total_clash_score
 max_clash_depth
+mean_clash_depth
+analysis_status
 dominant_region
 dominant_ratio
+dominant_valid_rgroup
+dominant_ratio_valid_rgroups
 failure_type
 recommended_action
 ```
@@ -778,7 +816,68 @@ median_total_clash_score
 max_total_clash_score
 ```
 
-### 10.3 `verifier_smoke_report.csv`
+Zero severe false positives on phase-1 clean calibration does not imply zero close contacts or statistically zero false-positive rate. Mild non-severe close contacts may exist and are intentionally tolerated.
+
+### 10.3 `strict_delta_false_positive_cases.csv`
+
+记录严格阈值, 例如 `δ = 0.3`, 下触发 severe clash 的 clean calibration case:
+
+```text
+sample_id
+dataset_name
+receptor_scope
+delta_angstrom
+num_severe_clash_pairs
+max_clash_depth
+total_clash_score
+dominant_region
+dominant_ratio_all_regions
+dominant_valid_rgroup
+dominant_ratio_valid_rgroups
+failure_type
+top_regions_json
+top_clash_pairs_json
+```
+
+### 10.4 `nonsevere_contact_stats.csv`
+
+记录 non-severe close contact 统计, 防止把 zero severe false positive 误写成 zero close contact:
+
+```text
+dataset_name
+receptor_scope
+delta_angstrom
+num_samples
+num_samples_with_any_clash_pair
+num_samples_with_nonsevere_clash_pair
+median_num_clash_pairs
+p95_num_clash_pairs
+max_num_clash_pairs
+median_max_depth
+p95_max_depth
+max_depth
+```
+
+### 10.5 `scope_comparison.csv`
+
+比较 `phase0_pocket8` 与 `pocket10_all_atoms` 的结果:
+
+```text
+sample_id
+dataset_name
+delta_angstrom
+pocket8_num_clash_pairs
+pocket10_num_clash_pairs
+pocket8_num_severe
+pocket10_num_severe
+score_diff
+max_depth_diff
+scope_result_same
+```
+
+当前 clean calibration 中两种 scope 结果一致, 只说明 clean pose 的 clash-relevant atoms 已被 8 Å pocket 覆盖. 它不验证修复候选移动到原 phase0 pocket8 边界外时的情况.
+
+### 10.6 `verifier_smoke_report.csv`
 
 clean-vs-clean smoke：
 
@@ -790,11 +889,22 @@ old_clash_resolved
 new_severe_clash_count
 scaffold_rmsd
 non_edit_rmsd
+coordinate_valid
+geometry_valid
+edit_compliance
 repair_pass
 failure_reasons
+old_pair_count_before
+old_pair_count_after
+old_pair_remaining_count
+old_pair_resolved_fraction
+new_pair_created_count
+new_pair_created_regions
+old_severe_pair_remaining_count
+new_severe_pair_created_count
 ```
 
-### 10.4 `summary.json`
+### 10.7 `summary.json`
 
 建议字段：
 
@@ -808,8 +918,18 @@ failure_reasons
   "default_old_scope": "phase0_pocket8",
   "default_new_scope": "pocket10_all_atoms",
   "full_receptor_enabled": false,
-  "clean_pool_severe_false_positive_count": 0,
-  "balanced_subset_severe_false_positive_count": 0,
+  "clean_pool_default_scope_severe_false_positive_count": 0,
+  "balanced_subset_default_scope_severe_false_positive_count": 0,
+  "per_scope_default_delta": {
+    "phase0_pocket8": {
+      "clean_pool_severe_fp": 0,
+      "balanced_subset_severe_fp": 0
+    },
+    "pocket10_all_atoms": {
+      "clean_pool_severe_fp": 0,
+      "balanced_subset_severe_fp": 0
+    }
+  },
   "verifier_smoke_pass_count": 28,
   "phase1_acceptance_status": "complete"
 }

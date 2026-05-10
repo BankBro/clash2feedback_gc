@@ -55,6 +55,9 @@ def test_single_rgroup_dominant() -> None:
     attr = attribute_clashes_to_rgroups(_sample(), _report([_pair(2, 2.0, "R2"), _pair(1, 0.5, "R1")]))
     assert attr["failure_type"] == "single_rgroup_clash"
     assert attr["dominant_region"] == "R2"
+    assert attr["dominant_region_all"] == "R2"
+    assert attr["dominant_valid_rgroup"] == "R2"
+    assert attr["dominant_ratio_valid_rgroups"] > 0.7
     assert attr["recommended_action"] == "local_rgroup_repair"
 
 
@@ -75,3 +78,11 @@ def test_no_severe_clash_reports_no_clash() -> None:
     assert attr["failure_type"] == "no_clash"
     assert attr["dominant_region"] == ""
     assert attr["dominant_ratio"] == 0.0
+
+
+def test_unsupported_report_is_not_silent_no_clash() -> None:
+    report = _report([], severe_count=0)
+    report["unsupported_reasons"] = ["unsupported_ligand_element:Na"]
+    attr = attribute_clashes_to_rgroups(_sample(), report)
+    assert attr["failure_type"] == "unknown_or_unsupported"
+    assert attr["recommended_action"] == "reject"

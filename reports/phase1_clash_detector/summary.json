@@ -15,8 +15,20 @@
   "default_old_scope": "phase0_pocket8",
   "default_new_scope": "pocket10_all_atoms",
   "full_receptor_enabled": false,
+  "clean_pool_default_scope_severe_false_positive_count": 0,
+  "balanced_subset_default_scope_severe_false_positive_count": 0,
   "clean_pool_severe_false_positive_count": 0,
   "balanced_subset_severe_false_positive_count": 0,
+  "per_scope_default_delta": {
+    "phase0_pocket8": {
+      "clean_pool_severe_fp": 0,
+      "balanced_subset_severe_fp": 0
+    },
+    "pocket10_all_atoms": {
+      "clean_pool_severe_fp": 0,
+      "balanced_subset_severe_fp": 0
+    }
+  },
   "verifier_smoke_total_count": 28,
   "verifier_smoke_pass_count": 28,
   "num_load_errors": 0,

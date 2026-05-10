@@ -31,6 +31,19 @@ def ligand_atom_regions(sample: dict[str, Any]) -> list[str]:
     return regions
 
 
+def ligand_region_warnings(sample: dict[str, Any]) -> list[str]:
+    ligand = sample.get("ligand", {})
+    num_atoms = int(ligand.get("num_atoms") or len(ligand.get("elements", [])) or np.asarray(ligand.get("coords")).shape[0])
+    masks = sample.get("masks", {})
+    warnings: list[str] = []
+    for key in ("ligand_scaffold_mask", "ligand_is_rgroup", "heavy_atom_mask"):
+        if key in masks and len(masks[key]) != num_atoms:
+            warnings.append(f"unsupported_mask:{key}_length_mismatch")
+    if "ligand_rgroup_id" in masks and len(masks["ligand_rgroup_id"]) != num_atoms:
+        warnings.append("unsupported_mask:ligand_rgroup_id_length_mismatch")
+    return warnings
+
+
 def attribute_clashes_to_rgroups(
     sample: dict[str, Any],
     clash_report: dict[str, Any],
@@ -59,29 +72,49 @@ def attribute_clashes_to_rgroups(
     severe_count = int(clash_report.get("num_severe_clash_pairs") or 0)
     unsupported_reasons = [str(item) for item in clash_report.get("unsupported_reasons", [])]
     top_regions = _top_regions(normalized_region_scores)
-    dominant_region = top_regions[0]["region"] if top_regions else ""
+    dominant_region_all = top_regions[0]["region"] if top_regions else ""
     total_score = float(sum(score for score in normalized_region_scores.values() if score > 0.0))
-    dominant_score = float(normalized_region_scores.get(dominant_region, 0.0))
-    dominant_ratio = dominant_score / total_score if total_score > 0.0 else 0.0
+    dominant_score_all = float(normalized_region_scores.get(dominant_region_all, 0.0))
+    dominant_ratio_all = dominant_score_all / total_score if total_score > 0.0 else 0.0
+    valid_rgroup_scores = {
+        region: float(score)
+        for region, score in normalized_region_scores.items()
+        if _is_valid_rgroup_region(region)
+    }
+    top_valid_rgroups = _top_regions(valid_rgroup_scores)
+    dominant_valid_rgroup = top_valid_rgroups[0]["region"] if top_valid_rgroups else ""
+    total_valid_score = float(sum(score for score in valid_rgroup_scores.values() if score > 0.0))
+    dominant_valid_score = float(valid_rgroup_scores.get(dominant_valid_rgroup, 0.0))
+    dominant_ratio_valid = dominant_valid_score / total_valid_score if total_valid_score > 0.0 else 0.0
+    num_nonzero_valid_rgroups = _num_scored_rgroups(valid_rgroup_scores)
+    scaffold_score = float(normalized_region_scores.get("scaffold", 0.0))
+    unsupported_region_score = float(normalized_region_scores.get("unsupported_rgroup", 0.0))
+    unknown_region_score = float(normalized_region_scores.get("unknown", 0.0))
 
-    if severe_count == 0:
-        dominant_region = ""
-        dominant_ratio = 0.0
+    if _has_unsupported_chemistry(unsupported_reasons):
+        failure_type = "unsupported_chemistry"
+        recommended_action = "reject"
+    elif _has_unsupported_analysis(unsupported_reasons):
+        failure_type = "unknown_or_unsupported"
+        recommended_action = "reject"
+    elif severe_count == 0:
+        dominant_region_all = ""
+        dominant_ratio_all = 0.0
         failure_type = "no_clash"
         recommended_action = "no_repair_needed"
-    elif _has_unsupported_chemistry(unsupported_reasons) or dominant_region in {"unsupported_rgroup", "unknown"}:
+    elif dominant_region_all in {"unsupported_rgroup", "unknown"}:
         failure_type = "unsupported_chemistry" if _has_unsupported_chemistry(unsupported_reasons) else "unknown_or_unsupported"
         recommended_action = "reject"
-    elif dominant_region == "scaffold":
+    elif dominant_region_all == "scaffold":
         failure_type = "scaffold_clash"
         recommended_action = "reject"
-    elif _is_valid_rgroup_region(dominant_region) and dominant_ratio >= float(single_region_threshold):
+    elif _is_valid_rgroup_region(dominant_region_all) and dominant_ratio_all >= float(single_region_threshold):
         failure_type = "single_rgroup_clash"
         recommended_action = "local_rgroup_repair"
-    elif _looks_global(normalized_region_scores, dominant_ratio, ambiguous_threshold):
+    elif _looks_global(normalized_region_scores, dominant_ratio_all, ambiguous_threshold):
         failure_type = "global_pose_failure"
         recommended_action = "full_resampling_or_reject"
-    elif dominant_ratio >= float(ambiguous_threshold):
+    elif dominant_ratio_all >= float(ambiguous_threshold):
         failure_type = "ambiguous_region_clash"
         recommended_action = "reject_or_expand_mask"
     elif _num_scored_rgroups(normalized_region_scores) >= 2:
@@ -95,8 +128,19 @@ def attribute_clashes_to_rgroups(
         "sample_id": clash_report.get("sample_id") or sample.get("sample_id", ""),
         "region_scores": dict(sorted(region_scores.items())),
         "normalized_region_scores": dict(sorted(normalized_region_scores.items())),
-        "dominant_region": dominant_region,
-        "dominant_ratio": float(dominant_ratio),
+        "dominant_region": dominant_region_all,
+        "dominant_ratio": float(dominant_ratio_all),
+        "dominant_region_all": dominant_region_all,
+        "dominant_ratio_all_regions": float(dominant_ratio_all),
+        "dominant_valid_rgroup": dominant_valid_rgroup,
+        "dominant_ratio_valid_rgroups": float(dominant_ratio_valid),
+        "num_nonzero_valid_rgroups": int(num_nonzero_valid_rgroups),
+        "scaffold_score": scaffold_score,
+        "unsupported_region_score": unsupported_region_score,
+        "unknown_region_score": unknown_region_score,
+        "valid_rgroup_scores": dict(sorted(valid_rgroup_scores.items())),
+        "all_region_scores": dict(sorted(normalized_region_scores.items())),
+        "top_valid_rgroups": top_valid_rgroups,
         "failure_type": failure_type,
         "recommended_action": recommended_action,
         "top_regions": top_regions,
@@ -135,6 +179,15 @@ def _top_regions(scores: dict[str, float]) -> list[dict[str, float | str]]:
 
 def _has_unsupported_chemistry(reasons: list[str]) -> bool:
     return any("covalent" in reason or "metal" in reason for reason in reasons)
+
+
+def _has_unsupported_analysis(reasons: list[str]) -> bool:
+    return any(
+        reason.startswith("unsupported_")
+        or reason.startswith("full_receptor_dynamic_shell")
+        or reason.startswith("partial_due_to")
+        for reason in reasons
+    )
 
 
 def _is_valid_rgroup_region(region: str) -> bool:

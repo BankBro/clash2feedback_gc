@@ -31,5 +31,8 @@
 - `verifier_smoke_report.csv`
 - `unsupported_cases.csv`
 - `vdw_radius_table.json`
+- `strict_delta_false_positive_cases.csv`
+- `nonsevere_contact_stats.csv`
+- `scope_comparison.csv`
 
 这些文件是 detector calibration, threshold sensitivity 和 verifier smoke 的运行报告, 不替代 `docs/` 中的方案文档.

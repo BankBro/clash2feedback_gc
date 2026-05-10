@@ -34,8 +34,12 @@ CLASH_REPORT_COLUMNS = [
     "num_severe_clash_pairs",
     "total_clash_score",
     "max_clash_depth",
+    "mean_clash_depth",
+    "analysis_status",
     "dominant_region",
     "dominant_ratio",
+    "dominant_valid_rgroup",
+    "dominant_ratio_valid_rgroups",
     "failure_type",
     "recommended_action",
 ]
@@ -46,11 +50,19 @@ ATTRIBUTION_COLUMNS = [
     "delta_angstrom",
     "dominant_region",
     "dominant_ratio",
+    "dominant_region_all",
+    "dominant_ratio_all_regions",
+    "dominant_valid_rgroup",
+    "dominant_ratio_valid_rgroups",
+    "num_nonzero_valid_rgroups",
     "failure_type",
     "recommended_action",
+    "analysis_status",
     "region_scores_json",
     "normalized_region_scores_json",
+    "valid_rgroup_scores_json",
     "top_regions_json",
+    "top_valid_rgroups_json",
 ]
 SENSITIVITY_COLUMNS = [
     "dataset_name",
@@ -62,6 +74,48 @@ SENSITIVITY_COLUMNS = [
     "median_total_clash_score",
     "max_total_clash_score",
 ]
+STRICT_FP_COLUMNS = [
+    "sample_id",
+    "dataset_name",
+    "receptor_scope",
+    "delta_angstrom",
+    "num_severe_clash_pairs",
+    "max_clash_depth",
+    "total_clash_score",
+    "dominant_region",
+    "dominant_ratio_all_regions",
+    "dominant_valid_rgroup",
+    "dominant_ratio_valid_rgroups",
+    "failure_type",
+    "top_regions_json",
+    "top_clash_pairs_json",
+]
+NONSEVERE_COLUMNS = [
+    "dataset_name",
+    "receptor_scope",
+    "delta_angstrom",
+    "num_samples",
+    "num_samples_with_any_clash_pair",
+    "num_samples_with_nonsevere_clash_pair",
+    "median_num_clash_pairs",
+    "p95_num_clash_pairs",
+    "max_num_clash_pairs",
+    "median_max_depth",
+    "p95_max_depth",
+    "max_depth",
+]
+SCOPE_COMPARISON_COLUMNS = [
+    "sample_id",
+    "dataset_name",
+    "delta_angstrom",
+    "pocket8_num_clash_pairs",
+    "pocket10_num_clash_pairs",
+    "pocket8_num_severe",
+    "pocket10_num_severe",
+    "score_diff",
+    "max_depth_diff",
+    "scope_result_same",
+]
 FAILURE_TYPE_COLUMNS = ["dataset_name", "receptor_scope", "delta_angstrom", "failure_type", "count"]
 VERIFIER_COLUMNS = [
     "sample_id",
@@ -72,10 +126,19 @@ VERIFIER_COLUMNS = [
     "no_new_severe_clash",
     "scaffold_rmsd",
     "non_edit_rmsd",
+    "coordinate_valid",
     "geometry_valid",
     "edit_compliance",
     "repair_pass",
     "failure_reasons",
+    "old_pair_count_before",
+    "old_pair_count_after",
+    "old_pair_remaining_count",
+    "old_pair_resolved_fraction",
+    "new_pair_created_count",
+    "new_pair_created_regions",
+    "old_severe_pair_remaining_count",
+    "new_severe_pair_created_count",
 ]
 UNSUPPORTED_COLUMNS = [
     "dataset_name",
@@ -191,6 +254,11 @@ def main() -> int:
     failure_counts_df = _failure_type_counts(pd.DataFrame(sensitivity_attrs))
     verifier_df = pd.DataFrame(verifier_rows, columns=VERIFIER_COLUMNS)
     unsupported_df = pd.DataFrame(unsupported_rows, columns=UNSUPPORTED_COLUMNS)
+    sensitivity_full_df = pd.DataFrame(sensitivity_rows)
+    sensitivity_attr_df = pd.DataFrame(sensitivity_attrs)
+    strict_fp_df = _strict_delta_false_positive_cases(sensitivity_full_df, sensitivity_attr_df, default_delta)
+    nonsevere_df = _nonsevere_contact_stats(sensitivity_full_df)
+    scope_comparison_df = _scope_comparison(sensitivity_full_df)
 
     clean_df.to_csv(output_root / "clean_clash_report.csv", index=False)
     balanced_df.to_csv(output_root / "balanced_clash_report.csv", index=False)
@@ -199,6 +267,9 @@ def main() -> int:
     failure_counts_df.to_csv(output_root / "failure_type_counts.csv", index=False)
     verifier_df.to_csv(output_root / "verifier_smoke_report.csv", index=False)
     unsupported_df.to_csv(output_root / "unsupported_cases.csv", index=False)
+    strict_fp_df.to_csv(output_root / "strict_delta_false_positive_cases.csv", index=False)
+    nonsevere_df.to_csv(output_root / "nonsevere_contact_stats.csv", index=False)
+    scope_comparison_df.to_csv(output_root / "scope_comparison.csv", index=False)
     with (output_root / "vdw_radius_table.json").open("w", encoding="utf-8") as f:
         json.dump(get_vdw_radius_table(), f, ensure_ascii=False, indent=2)
 
@@ -337,10 +408,17 @@ def _clash_row(manifest_row: dict[str, Any], report: dict[str, Any], attr: dict[
         "num_severe_clash_pairs": int(report.get("num_severe_clash_pairs") or 0),
         "total_clash_score": float(report.get("total_clash_score") or 0.0),
         "max_clash_depth": float(report.get("max_clash_depth") or 0.0),
+        "mean_clash_depth": float(report.get("mean_clash_depth") or 0.0),
+        "analysis_status": report.get("analysis_status", "ok"),
         "dominant_region": attr.get("dominant_region", ""),
         "dominant_ratio": float(attr.get("dominant_ratio") or 0.0),
+        "dominant_valid_rgroup": attr.get("dominant_valid_rgroup", ""),
+        "dominant_ratio_valid_rgroups": float(attr.get("dominant_ratio_valid_rgroups") or 0.0),
         "failure_type": attr.get("failure_type", ""),
         "recommended_action": attr.get("recommended_action", ""),
+        "dominant_ratio_all_regions": float(attr.get("dominant_ratio_all_regions") or 0.0),
+        "top_regions_json": json.dumps(attr.get("top_regions", []), ensure_ascii=False),
+        "top_clash_pairs_json": json.dumps(_top_clash_pairs(report), ensure_ascii=False),
     }
 
 
@@ -352,16 +430,39 @@ def _attr_row(dataset_name: str, report: dict[str, Any], attr: dict[str, Any]) -
         "delta_angstrom": float(report.get("delta_angstrom") or 0.0),
         "dominant_region": attr.get("dominant_region", ""),
         "dominant_ratio": float(attr.get("dominant_ratio") or 0.0),
+        "dominant_region_all": attr.get("dominant_region_all", ""),
+        "dominant_ratio_all_regions": float(attr.get("dominant_ratio_all_regions") or 0.0),
+        "dominant_valid_rgroup": attr.get("dominant_valid_rgroup", ""),
+        "dominant_ratio_valid_rgroups": float(attr.get("dominant_ratio_valid_rgroups") or 0.0),
+        "num_nonzero_valid_rgroups": int(attr.get("num_nonzero_valid_rgroups") or 0),
         "failure_type": attr.get("failure_type", ""),
         "recommended_action": attr.get("recommended_action", ""),
+        "analysis_status": report.get("analysis_status", "ok"),
         "region_scores_json": json.dumps(attr.get("region_scores", {}), ensure_ascii=False, sort_keys=True),
         "normalized_region_scores_json": json.dumps(
             attr.get("normalized_region_scores", {}),
             ensure_ascii=False,
             sort_keys=True,
         ),
+        "valid_rgroup_scores_json": json.dumps(attr.get("valid_rgroup_scores", {}), ensure_ascii=False, sort_keys=True),
         "top_regions_json": json.dumps(attr.get("top_regions", []), ensure_ascii=False),
+        "top_valid_rgroups_json": json.dumps(attr.get("top_valid_rgroups", []), ensure_ascii=False),
     }
+
+
+def _top_clash_pairs(report: dict[str, Any], limit: int = 5) -> list[dict[str, Any]]:
+    pairs = sorted(report.get("clash_pairs", []), key=lambda item: float(item.get("clash_depth") or 0.0), reverse=True)
+    keys = [
+        "ligand_atom_idx",
+        "protein_atom_idx",
+        "ligand_region",
+        "protein_residue_key",
+        "distance",
+        "vdw_sum",
+        "clash_depth",
+        "is_severe",
+    ]
+    return [{key: pair.get(key) for key in keys} for pair in pairs[:limit]]
 
 
 def _unsupported_row(
@@ -415,6 +516,103 @@ def _failure_type_counts(attrs: pd.DataFrame) -> pd.DataFrame:
     return counts[FAILURE_TYPE_COLUMNS]
 
 
+def _strict_delta_false_positive_cases(
+    rows: pd.DataFrame,
+    attrs: pd.DataFrame,
+    default_delta: float,
+) -> pd.DataFrame:
+    if rows.empty:
+        return pd.DataFrame(columns=STRICT_FP_COLUMNS)
+    strict = rows[(rows["delta_angstrom"] < float(default_delta)) & (rows["num_severe_clash_pairs"] > 0)].copy()
+    if strict.empty:
+        return pd.DataFrame(columns=STRICT_FP_COLUMNS)
+    attr_cols = [
+        "dataset_name",
+        "sample_id",
+        "receptor_scope",
+        "delta_angstrom",
+        "dominant_ratio_all_regions",
+        "top_regions_json",
+    ]
+    available_attr_cols = [column for column in attr_cols if column in attrs.columns]
+    if available_attr_cols:
+        strict = strict.merge(
+            attrs[available_attr_cols],
+            on=["dataset_name", "sample_id", "receptor_scope", "delta_angstrom"],
+            how="left",
+            suffixes=("", "_attr"),
+        )
+    for column in STRICT_FP_COLUMNS:
+        if column not in strict.columns:
+            strict[column] = "" if column.endswith("_json") or column in {"dominant_region", "dominant_valid_rgroup", "failure_type"} else 0
+    return strict[STRICT_FP_COLUMNS].sort_values(["dataset_name", "sample_id", "receptor_scope"]).reset_index(drop=True)
+
+
+def _nonsevere_contact_stats(rows: pd.DataFrame) -> pd.DataFrame:
+    if rows.empty:
+        return pd.DataFrame(columns=NONSEVERE_COLUMNS)
+    result_rows: list[dict[str, Any]] = []
+    for key, group in rows.groupby(["dataset_name", "receptor_scope", "delta_angstrom"], dropna=False):
+        dataset_name, scope, delta = key
+        clash_counts = group["num_clash_pairs"].astype(float)
+        max_depths = group["max_clash_depth"].astype(float)
+        result_rows.append(
+            {
+                "dataset_name": dataset_name,
+                "receptor_scope": scope,
+                "delta_angstrom": float(delta),
+                "num_samples": int(group["sample_id"].nunique()),
+                "num_samples_with_any_clash_pair": int((group["num_clash_pairs"] > 0).sum()),
+                "num_samples_with_nonsevere_clash_pair": int(
+                    ((group["num_clash_pairs"] > 0) & (group["num_severe_clash_pairs"] == 0)).sum()
+                ),
+                "median_num_clash_pairs": float(clash_counts.median()) if not group.empty else 0.0,
+                "p95_num_clash_pairs": float(clash_counts.quantile(0.95)) if not group.empty else 0.0,
+                "max_num_clash_pairs": int(clash_counts.max()) if not group.empty else 0,
+                "median_max_depth": float(max_depths.median()) if not group.empty else 0.0,
+                "p95_max_depth": float(max_depths.quantile(0.95)) if not group.empty else 0.0,
+                "max_depth": float(max_depths.max()) if not group.empty else 0.0,
+            }
+        )
+    return pd.DataFrame(result_rows, columns=NONSEVERE_COLUMNS)
+
+
+def _scope_comparison(rows: pd.DataFrame) -> pd.DataFrame:
+    if rows.empty:
+        return pd.DataFrame(columns=SCOPE_COMPARISON_COLUMNS)
+    required_scopes = {"phase0_pocket8", "pocket10_all_atoms"}
+    result_rows: list[dict[str, Any]] = []
+    for key, group in rows.groupby(["dataset_name", "sample_id", "delta_angstrom"], dropna=False):
+        dataset_name, sample_id, delta = key
+        by_scope = {str(row["receptor_scope"]): row for _, row in group.iterrows()}
+        if not required_scopes.issubset(by_scope):
+            continue
+        pocket8 = by_scope["phase0_pocket8"]
+        pocket10 = by_scope["pocket10_all_atoms"]
+        score_diff = float(pocket10["total_clash_score"]) - float(pocket8["total_clash_score"])
+        max_depth_diff = float(pocket10["max_clash_depth"]) - float(pocket8["max_clash_depth"])
+        result_rows.append(
+            {
+                "sample_id": sample_id,
+                "dataset_name": dataset_name,
+                "delta_angstrom": float(delta),
+                "pocket8_num_clash_pairs": int(pocket8["num_clash_pairs"]),
+                "pocket10_num_clash_pairs": int(pocket10["num_clash_pairs"]),
+                "pocket8_num_severe": int(pocket8["num_severe_clash_pairs"]),
+                "pocket10_num_severe": int(pocket10["num_severe_clash_pairs"]),
+                "score_diff": score_diff,
+                "max_depth_diff": max_depth_diff,
+                "scope_result_same": bool(
+                    int(pocket8["num_clash_pairs"]) == int(pocket10["num_clash_pairs"])
+                    and int(pocket8["num_severe_clash_pairs"]) == int(pocket10["num_severe_clash_pairs"])
+                    and abs(score_diff) < 1e-9
+                    and abs(max_depth_diff) < 1e-9
+                ),
+            }
+        )
+    return pd.DataFrame(result_rows, columns=SCOPE_COMPARISON_COLUMNS)
+
+
 def _run_verifier_smoke(
     records: list[dict[str, Any]],
     config: dict[str, Any],
@@ -439,10 +637,19 @@ def _run_verifier_smoke(
                     "no_new_severe_clash": bool(result["no_new_severe_clash"]),
                     "scaffold_rmsd": float(result["scaffold_rmsd"]),
                     "non_edit_rmsd": float(result["non_edit_rmsd"]),
+                    "coordinate_valid": bool(result["coordinate_valid"]),
                     "geometry_valid": bool(result["geometry_valid"]),
                     "edit_compliance": bool(result["edit_compliance"]),
                     "repair_pass": bool(result["repair_pass"]),
                     "failure_reasons": json.dumps(result["failure_reasons"], ensure_ascii=False),
+                    "old_pair_count_before": int(result["old_pair_count_before"]),
+                    "old_pair_count_after": int(result["old_pair_count_after"]),
+                    "old_pair_remaining_count": int(result["old_pair_remaining_count"]),
+                    "old_pair_resolved_fraction": float(result["old_pair_resolved_fraction"]),
+                    "new_pair_created_count": int(result["new_pair_created_count"]),
+                    "new_pair_created_regions": json.dumps(result["new_pair_created_regions"], ensure_ascii=False),
+                    "old_severe_pair_remaining_count": int(result["old_severe_pair_remaining_count"]),
+                    "new_severe_pair_created_count": int(result["new_severe_pair_created_count"]),
                 }
             )
             for reason in result.get("unsupported_reasons", []):
@@ -476,6 +683,7 @@ def _summary(
         (balanced_df.get("receptor_scope") == old_scope)
         & (balanced_df.get("delta_angstrom") == float(default_delta))
     ] if not balanced_df.empty else balanced_df
+    per_scope_default_delta = _per_scope_default_delta(clean_df, balanced_df, scopes, default_delta)
     return {
         "schema_version": str(config.get("schema_version", "phase1_v0_1")),
         "num_clean_pool_samples": int(len(clean_records)),
@@ -486,13 +694,49 @@ def _summary(
         "default_old_scope": old_scope,
         "default_new_scope": new_scope,
         "full_receptor_enabled": bool(full_receptor_enabled),
-        "clean_pool_severe_false_positive_count": int((clean_default.get("num_severe_clash_pairs", pd.Series(dtype=int)) > 0).sum()),
-        "balanced_subset_severe_false_positive_count": int((balanced_default.get("num_severe_clash_pairs", pd.Series(dtype=int)) > 0).sum()),
+        "clean_pool_default_scope_severe_false_positive_count": int(
+            (clean_default.get("num_severe_clash_pairs", pd.Series(dtype=int)) > 0).sum()
+        ),
+        "balanced_subset_default_scope_severe_false_positive_count": int(
+            (balanced_default.get("num_severe_clash_pairs", pd.Series(dtype=int)) > 0).sum()
+        ),
+        "clean_pool_severe_false_positive_count": int(
+            (clean_default.get("num_severe_clash_pairs", pd.Series(dtype=int)) > 0).sum()
+        ),
+        "balanced_subset_severe_false_positive_count": int(
+            (balanced_default.get("num_severe_clash_pairs", pd.Series(dtype=int)) > 0).sum()
+        ),
+        "per_scope_default_delta": per_scope_default_delta,
         "verifier_smoke_total_count": int(len(verifier_df)),
         "verifier_smoke_pass_count": int(verifier_df.get("repair_pass", pd.Series(dtype=bool)).sum()) if not verifier_df.empty else 0,
         "num_load_errors": int(len(load_errors)),
         "phase1_acceptance_status": "complete" if not load_errors else "incomplete",
     }
+
+
+def _per_scope_default_delta(
+    clean_df: pd.DataFrame,
+    balanced_df: pd.DataFrame,
+    scopes: list[str],
+    default_delta: float,
+) -> dict[str, dict[str, int]]:
+    result: dict[str, dict[str, int]] = {}
+    for scope in scopes:
+        clean_scope = clean_df[
+            (clean_df.get("receptor_scope") == scope)
+            & (clean_df.get("delta_angstrom") == float(default_delta))
+        ] if not clean_df.empty else clean_df
+        balanced_scope = balanced_df[
+            (balanced_df.get("receptor_scope") == scope)
+            & (balanced_df.get("delta_angstrom") == float(default_delta))
+        ] if not balanced_df.empty else balanced_df
+        result[scope] = {
+            "clean_pool_severe_fp": int((clean_scope.get("num_severe_clash_pairs", pd.Series(dtype=int)) > 0).sum()),
+            "balanced_subset_severe_fp": int(
+                (balanced_scope.get("num_severe_clash_pairs", pd.Series(dtype=int)) > 0).sum()
+            ),
+        }
+    return result
 
 
 if __name__ == "__main__":

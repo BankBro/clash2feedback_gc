@@ -165,6 +165,9 @@ conda run -n c2f_cpu python scripts/phase1_check_clashes.py \
 - `reports/phase1_clash_detector/verifier_smoke_report.csv`
 - `reports/phase1_clash_detector/unsupported_cases.csv`
 - `reports/phase1_clash_detector/vdw_radius_table.json`
+- `reports/phase1_clash_detector/strict_delta_false_positive_cases.csv`
+- `reports/phase1_clash_detector/nonsevere_contact_stats.csv`
+- `reports/phase1_clash_detector/scope_comparison.csv`
 
 ## 7. 协作说明
 

@@ -70,3 +70,21 @@ def test_severe_threshold_is_applied() -> None:
     )
     assert report["num_clash_pairs"] == 1
     assert report["num_severe_clash_pairs"] == 0
+
+
+def test_unsupported_ligand_element_is_reported() -> None:
+    sample = _sample(np.asarray([[2.5, 0.0, 0.0]], dtype=np.float32))
+    sample["ligand"]["elements"][0] = "Na"
+    sample["ligand"]["atomic_numbers"][0] = 11
+    report = detect_clashes(sample)
+    assert report["analysis_status"] == "unsupported_chemistry"
+    assert any("unsupported_metal" in reason for reason in report["unsupported_reasons"])
+
+
+def test_covalent_ligand_metadata_is_unsupported() -> None:
+    sample = _sample(np.asarray([[2.5, 0.0, 0.0]], dtype=np.float32))
+    sample["metadata"]["is_covalent_ligand"] = True
+    report = detect_clashes(sample)
+    assert report["analysis_status"] == "unsupported_chemistry"
+    assert report["num_clash_pairs"] == 0
+    assert "unsupported_covalent_ligand" in report["unsupported_reasons"]

@@ -30,7 +30,8 @@ def verify_repair(
 
     failed_coords = np.asarray(failed_ligand_coords, dtype=np.float32)
     repaired_coords = np.asarray(repaired_ligand_coords, dtype=np.float32)
-    geometry_valid = _geometry_valid(sample, failed_coords, repaired_coords)
+    coordinate_valid = _coordinate_valid(sample, failed_coords, repaired_coords)
+    geometry_valid = coordinate_valid
 
     if old_clash_report is None:
         old_clash_report = detect_clashes(
@@ -57,14 +58,18 @@ def verify_repair(
 
     old_before = float(old_clash_report.get("total_clash_score") or 0.0)
     old_after = float(old_after_report.get("total_clash_score") or 0.0)
+    pair_stats = _pair_tracking(old_clash_report, old_after_report, new_report)
     old_before_severe = int(old_clash_report.get("num_severe_clash_pairs") or 0)
     old_after_severe = int(old_after_report.get("num_severe_clash_pairs") or 0)
     if old_before_severe == 0 and old_after_severe == 0:
         old_clash_resolved = True
     else:
-        old_clash_resolved = old_after <= max(old_before * resolved_ratio, 1e-12)
+        old_clash_resolved = (
+            int(pair_stats["old_severe_pair_remaining_count"]) == 0
+            and old_after <= max(old_before * resolved_ratio, 1e-12)
+        )
     new_severe_count = int(new_report.get("num_severe_clash_pairs") or 0)
-    no_new_severe_clash = new_severe_count == 0
+    no_new_severe_clash = new_severe_count == 0 and int(pair_stats["new_severe_pair_created_count"]) == 0
 
     scaffold_mask = _scaffold_mask(sample)
     scaffold_rmsd = _masked_rmsd(failed_coords, repaired_coords, scaffold_mask)
@@ -120,6 +125,7 @@ def verify_repair(
         "non_edit_rmsd": float(non_edit_rmsd),
         "non_edit_stable": bool(non_edit_stable),
         "geometry_valid": bool(geometry_valid),
+        "coordinate_valid": bool(coordinate_valid),
         "edit_compliance": bool(edit_compliance),
         "pocket_retention": bool(pocket_retention),
         "repair_pass": bool(repair_pass),
@@ -127,10 +133,11 @@ def verify_repair(
         "unsupported_reasons": unsupported_reasons,
         "receptor_scope_old": old_scope,
         "receptor_scope_new": new_scope,
+        **pair_stats,
     }
 
 
-def _geometry_valid(sample: dict[str, Any], failed_coords: np.ndarray, repaired_coords: np.ndarray) -> bool:
+def _coordinate_valid(sample: dict[str, Any], failed_coords: np.ndarray, repaired_coords: np.ndarray) -> bool:
     expected_shape = np.asarray(sample.get("ligand", {}).get("coords"), dtype=np.float32).shape
     return (
         failed_coords.shape == expected_shape
@@ -141,6 +148,51 @@ def _geometry_valid(sample: dict[str, Any], failed_coords: np.ndarray, repaired_
         and bool(np.isfinite(failed_coords).all())
         and bool(np.isfinite(repaired_coords).all())
     )
+
+
+def _pair_tracking(
+    old_clash_report: dict[str, Any],
+    old_after_report: dict[str, Any],
+    new_report: dict[str, Any],
+) -> dict[str, Any]:
+    old_pairs = _pair_key_set(old_clash_report.get("clash_pairs", []), severe_only=False)
+    old_after_pairs = _pair_key_set(old_after_report.get("clash_pairs", []), severe_only=False)
+    old_severe_pairs = _pair_key_set(old_clash_report.get("clash_pairs", []), severe_only=True)
+    old_after_severe_pairs = _pair_key_set(old_after_report.get("clash_pairs", []), severe_only=True)
+    new_scope_pairs = _pair_key_set(new_report.get("clash_pairs", []), severe_only=False)
+    new_scope_severe_pairs = _pair_key_set(new_report.get("clash_pairs", []), severe_only=True)
+    old_pair_remaining = old_pairs & old_after_pairs
+    old_severe_pair_remaining = old_severe_pairs & old_after_severe_pairs
+    new_pair_created = new_scope_pairs - old_pairs
+    new_severe_pair_created = new_scope_severe_pairs - old_severe_pairs
+    return {
+        "old_pair_count_before": int(len(old_pairs)),
+        "old_pair_count_after": int(len(old_after_pairs)),
+        "old_pair_remaining_count": int(len(old_pair_remaining)),
+        "old_pair_resolved_fraction": float((len(old_pairs) - len(old_pair_remaining)) / len(old_pairs)) if old_pairs else 1.0,
+        "new_pair_created_count": int(len(new_pair_created)),
+        "new_pair_created_regions": sorted(_regions_for_keys(new_report.get("clash_pairs", []), new_pair_created)),
+        "old_severe_pair_remaining_count": int(len(old_severe_pair_remaining)),
+        "new_severe_pair_created_count": int(len(new_severe_pair_created)),
+    }
+
+
+def _pair_key_set(pairs: list[dict[str, Any]], *, severe_only: bool) -> set[tuple[int, int]]:
+    result: set[tuple[int, int]] = set()
+    for pair in pairs:
+        if severe_only and not bool(pair.get("is_severe")):
+            continue
+        result.add((int(pair["ligand_atom_idx"]), int(pair["protein_atom_idx"])))
+    return result
+
+
+def _regions_for_keys(pairs: list[dict[str, Any]], keys: set[tuple[int, int]]) -> set[str]:
+    result: set[str] = set()
+    for pair in pairs:
+        key = (int(pair["ligand_atom_idx"]), int(pair["protein_atom_idx"]))
+        if key in keys:
+            result.add(str(pair.get("ligand_region") or "unknown"))
+    return result
 
 
 def _scaffold_mask(sample: dict[str, Any]) -> np.ndarray:

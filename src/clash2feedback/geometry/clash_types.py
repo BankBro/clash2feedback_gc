@@ -35,6 +35,7 @@ class ClashReport:
     mean_clash_depth: float = 0.0
     clash_pairs: list[ClashPair] = field(default_factory=list)
     unsupported_reasons: list[str] = field(default_factory=list)
+    analysis_status: str = "ok"
 
     def to_dict(self) -> dict[str, Any]:
         result = asdict(self)

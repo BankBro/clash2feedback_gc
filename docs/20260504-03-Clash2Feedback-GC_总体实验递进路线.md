@@ -506,14 +506,24 @@ scripts/phase3_rule_locator.py
 
 ### 6.4 评估指标和通过标准
 
+阶段 3 只在 supported single-R-group synthetic failures 上计算主定位指标. Unsupported, scaffold clash, multi-region clash 和 global pose failure 不混入 Top-1 / Top-3 主指标, 但必须单独统计 reject / unsupported 分流是否正确.
+
 | 指标 | 含义 | 最低要求 |
 |---|---|---:|
-| R-group Top-1 Accuracy | 预测失败 R-group 是否正确 | > 70% |
-| R-group Top-3 Accuracy | 真实失败 R-group 是否在前三 | > 90% |
-| dominant ratio 平均值 | 单区域主导程度 | > 0.75 |
+| Coverage | supported single-R-group 样本中系统愿意进入 local repair 的比例 | 报告 |
+| Top-1 | reject 算 miss, 预测失败 R-group 是否正确 | > 70% |
+| Top-1 covered | 只看进入 local repair 的样本, locator 本身是否准确 | 报告 |
+| Top-3 rank | 真实失败 R-group 是否在 valid R-groups 前三 | > 90% |
+| Top-3 operational | 进入 local repair 且真实 R-group 在前三的比例 | 报告 |
+| dominant ratio valid 平均值 | valid R-group 内单区域主导程度 | > 0.75 |
+| Reject recall | hard / multi-region / scaffold / global pose case 是否被正确分流 | 报告 |
+| Unsupported recall | unsupported chemistry / mask case 是否被正确识别 | 报告 |
+| False local repair | reject 或 unsupported case 被误送入 local repair 的比例 | 越低越好 |
 | Atom-level F1 | 失败原子级定位质量 | 观察 |
 | Heatmap AUPRC | 蛋白碰撞热区质量 | 观察 |
 | Severity MAE | 严重度误差 | 观察 |
+
+Top-1 是主 operational 指标, reject 算 miss. Top-1 covered 用来判断 locator 在覆盖样本上的纯定位质量. Reject recall, unsupported recall 和 false local repair 是安全分流指标, 防止系统把不适合局部修复的 case 强行送入 single R-group repair.
 
 ---
 

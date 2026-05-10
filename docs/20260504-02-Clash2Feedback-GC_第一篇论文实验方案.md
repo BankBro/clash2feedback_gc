@@ -76,6 +76,30 @@ Binding Success Rate
 
 第一篇主任务是 `single-region R-group clash repair`. Multi-region clash, scaffold clash, global pose failure, covalent ligand, metal coordination 等情况第一版应识别并标记为 `unsupported` 或 `reject`, 不进入 single-R-group repair 主指标. 后续可通过 expand-mask, sequential repair, full resampling, multi-label critic 或 learned adapter 逐步处理.
 
+### 1.3 BIBM 版收敛口径
+
+若以 BIBM full paper 为目标, 第一版不主打完整 Clash2Feedback-GC 大框架, 而应收敛成 protein-ligand steric clash 定位与局部修复的小闭环:
+
+```text
+给定一个在 pocket 中发生局部 protein-ligand steric clash 的 failed ligand candidate,
+定位主要失败 R-group,
+只修该局部区域,
+并验证 old clash resolved, no new clash, scaffold preserved, non-edit region preserved.
+```
+
+BIBM 版最小实验包:
+
+| 模块 | 最低要求 |
+|---|---|
+| benchmark | injected split + small natural / model-induced split |
+| locator | rule locator / Clash2Mask |
+| repair | local torsion / conformer repair, R-group resampling 可作为增强 |
+| verifier | old clash resolved + no new clash + scaffold / non-edit RMSD |
+| baselines | hard filter, resampling, full-ligand repair, random mask, reference mask |
+| main metric | Reliable Repair Yield |
+
+主趋势应围绕可靠修复率, scaffold 保持, 非编辑区保持, no-new-clash rate 和 cost per success 展开. Docking score 不作为主指标.
+
 ---
 
 ## 2. 第一篇核心实验问题
