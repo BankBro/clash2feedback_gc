@@ -31,5 +31,14 @@
   ],
   "phase1_report_root": "/home/lyj/mnt/project/clash2feedback_gc/reports/phase1_clash_detector",
   "phase2_acceptance_status": "complete",
-  "visual_qc_status": "pending_manual_review"
+  "visual_qc_status": "sampled_visual_qc_passed_with_minor_caveats",
+  "energy_delta_threshold_mode": "record_only",
+  "energy_delta_filter_interpretation": "record_only_not_hard_filter",
+  "visual_qc_num_cases_reviewed": 32,
+  "visual_qc_minor_caveats": [
+    "invalid_conformer has no dedicated ligand internal self-clash highlight view",
+    "two invalid_conformer visual duplicate pairs: case_000019/case_000029 and case_000057/case_000070",
+    "ambiguous_region overlay_surface is less informative for case_000717 and case_000718",
+    "near_miss_contact has no severe VDW pair by definition, so clash_pair_vdw is background-only"
+  ]
 }

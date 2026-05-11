@@ -123,6 +123,21 @@ def test_clear_view_selection_prefers_unblocked_pocket_side(tmp_path: Path) -> N
     assert float(np.dot(np.asarray(camera.direction), np.asarray([1.0, 0.0, 0.0]))) < 0.4
 
 
+def test_clear_view_selection_applies_candidate_filter_before_diverse_pick(tmp_path: Path) -> None:
+    sample_dir = _make_visual_package(tmp_path)
+
+    cameras = select_clear_camera_views(
+        sample_dir,
+        view="overview",
+        num_views=3,
+        num_candidates=128,
+        camera_filter=lambda camera: camera.direction[0] < -0.2,
+    )
+
+    assert len(cameras) == 3
+    assert all(camera.direction[0] < -0.2 for camera in cameras)
+
+
 def test_render_visual_check_images_dry_run_writes_clear_view_scripts(tmp_path: Path) -> None:
     sample_dir = _make_visual_package(tmp_path)
     tasks = build_render_tasks(tmp_path, views=["clash"], num_clear_views=2, candidate_directions=64)

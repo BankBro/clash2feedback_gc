@@ -34,6 +34,9 @@ from clash2feedback.perturb.torsion import torsion_perturb_target_rgroup
 from clash2feedback.utils.config import load_yaml_config, resolve_repo_path
 
 
+ENERGY_DELTA_LARGE_ABS_THRESHOLD = 50.0
+
+
 REPORT_COLUMNS = [
     "case_id",
     "base_sample_id",
@@ -624,6 +627,8 @@ def _write_reports(
     manifest_df[manifest_df["oracle_split"] == "duplicate_removed"].to_csv(report_root / "duplicate_cases.csv", index=False)
     manifest_df[manifest_df["oracle_split"] == "near_miss_contact"].to_csv(report_root / "near_miss_cases.csv", index=False)
     _delta_sensitivity_report(manifest_df).to_csv(report_root / "delta_sensitivity.csv", index=False)
+    _energy_delta_stats_report(manifest_df).to_csv(report_root / "energy_delta_stats.csv", index=False)
+    _energy_delta_outliers_report(manifest_df).to_csv(report_root / "energy_delta_outliers.csv", index=False)
     _difficulty_bins_report(manifest_df).to_csv(report_root / "difficulty_bins.csv", index=False)
     visual_df = _visual_qc_cases(manifest_df, config)
     visual_df.to_csv(report_root / "visual_qc_cases.csv", index=False)
@@ -638,11 +643,131 @@ def _attempt_row(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _delta_sensitivity_report(manifest_df: pd.DataFrame) -> pd.DataFrame:
+    status_columns = ["target_severe", "no_target_severe", "unsupported_or_unavailable"]
     rows = []
     for column, delta in [("delta03_status", 0.3), ("delta04_status", 0.4), ("delta05_status", 0.5)]:
-        counts = manifest_df[column].value_counts(dropna=False).to_dict() if column in manifest_df else {}
-        rows.append({"delta_angstrom": delta, **{str(key): int(value) for key, value in counts.items()}})
-    return pd.DataFrame(rows)
+        if column in manifest_df:
+            statuses = manifest_df[column].map(_normalize_delta_status)
+            counts = statuses.value_counts(dropna=False).to_dict()
+        else:
+            counts = {}
+        row = {"delta_angstrom": delta}
+        row.update({status: int(counts.get(status, 0)) for status in status_columns})
+        for status, count in sorted(counts.items()):
+            if status not in row:
+                row[str(status)] = int(count)
+        rows.append(row)
+    return pd.DataFrame(rows).fillna(0)
+
+
+def _normalize_delta_status(value: Any) -> str:
+    if pd.isna(value) or str(value).strip() == "":
+        return "unsupported_or_unavailable"
+    return str(value)
+
+
+def _energy_delta_stats_report(manifest_df: pd.DataFrame) -> pd.DataFrame:
+    columns = [
+        "oracle_split",
+        "injection_mode",
+        "forcefield_type",
+        "count",
+        "num_available",
+        "mean_energy_delta",
+        "median_energy_delta",
+        "p90_energy_delta",
+        "p95_energy_delta",
+        "p99_energy_delta",
+        "max_energy_delta",
+        "num_large_positive_delta",
+        "num_large_negative_delta",
+    ]
+    if manifest_df.empty:
+        return pd.DataFrame(columns=columns)
+
+    df = manifest_df.copy()
+    df["forcefield_type"] = df["forcefield_type"].replace("", "unavailable").fillna("unavailable")
+    df["energy_delta_numeric"] = pd.to_numeric(df["energy_delta"], errors="coerce")
+    rows: list[dict[str, Any]] = []
+    grouped = df.groupby(["oracle_split", "injection_mode", "forcefield_type"], dropna=False, sort=True)
+    for (oracle_split, injection_mode, forcefield_type), group in grouped:
+        values = group["energy_delta_numeric"].dropna()
+        rows.append(
+            {
+                "oracle_split": str(oracle_split),
+                "injection_mode": str(injection_mode),
+                "forcefield_type": str(forcefield_type),
+                "count": int(len(group)),
+                "num_available": int(len(values)),
+                "mean_energy_delta": _safe_stat(values, "mean"),
+                "median_energy_delta": _safe_stat(values, "median"),
+                "p90_energy_delta": _safe_quantile(values, 0.90),
+                "p95_energy_delta": _safe_quantile(values, 0.95),
+                "p99_energy_delta": _safe_quantile(values, 0.99),
+                "max_energy_delta": _safe_stat(values, "max"),
+                "num_large_positive_delta": int((values > ENERGY_DELTA_LARGE_ABS_THRESHOLD).sum()),
+                "num_large_negative_delta": int((values < -ENERGY_DELTA_LARGE_ABS_THRESHOLD).sum()),
+            }
+        )
+    return pd.DataFrame(rows, columns=columns)
+
+
+def _safe_stat(values: pd.Series, name: str) -> float:
+    if values.empty:
+        return float("nan")
+    return float(getattr(values, name)())
+
+
+def _safe_quantile(values: pd.Series, quantile: float) -> float:
+    if values.empty:
+        return float("nan")
+    return float(values.quantile(quantile))
+
+
+def _energy_delta_outliers_report(manifest_df: pd.DataFrame) -> pd.DataFrame:
+    columns = [
+        "case_id",
+        "oracle_split",
+        "injection_mode",
+        "target_rgroup",
+        "forcefield_type",
+        "energy_original",
+        "energy_failed",
+        "energy_delta",
+        "energy_delta_percentile",
+        "energy_delta_strict_pass",
+        "energy_delta_outlier_flag",
+        "ligand_valid",
+        "ligand_internal_severe_clash_count",
+        "target_num_severe_pairs",
+        "max_clash_depth",
+        "visual_qc_recommended",
+        "sample_path",
+        "failed_ligand_sdf",
+    ]
+    if manifest_df.empty:
+        return pd.DataFrame(columns=columns)
+
+    df = manifest_df.copy()
+    df["energy_delta_numeric"] = pd.to_numeric(df["energy_delta"], errors="coerce")
+    finite = df["energy_delta_numeric"].dropna()
+    if finite.empty:
+        return pd.DataFrame(columns=columns)
+
+    abs_delta = finite.abs()
+    p95_abs_delta = float(abs_delta.quantile(0.95))
+    outlier_mask = df["energy_delta_numeric"].abs() >= p95_abs_delta
+    large_mask = df["energy_delta_numeric"].abs() > ENERGY_DELTA_LARGE_ABS_THRESHOLD
+    selected = df[outlier_mask | large_mask].copy()
+    abs_percentile = df["energy_delta_numeric"].abs().rank(pct=True)
+    selected["energy_delta_percentile"] = abs_percentile.loc[selected.index].astype(float)
+    selected["energy_delta_strict_pass"] = selected["energy_delta_numeric"].abs() <= ENERGY_DELTA_LARGE_ABS_THRESHOLD
+    selected["energy_delta_outlier_flag"] = selected["energy_delta_numeric"].abs().map(
+        lambda value: f"abs_delta_ge_p95_or_{ENERGY_DELTA_LARGE_ABS_THRESHOLD:g}" if value >= p95_abs_delta or value > ENERGY_DELTA_LARGE_ABS_THRESHOLD else ""
+    )
+    selected["visual_qc_recommended"] = True
+    selected = selected.sort_values("energy_delta_numeric", key=lambda series: series.abs(), ascending=False)
+    return selected[columns]
 
 
 def _difficulty_bins_report(manifest_df: pd.DataFrame) -> pd.DataFrame:
@@ -655,8 +780,11 @@ def _visual_qc_cases(manifest_df: pd.DataFrame, config: dict[str, Any]) -> pd.Da
     visual_cfg = config.get("visual_qc", {})
     parts = [
         manifest_df[manifest_df["oracle_split"] == "supported_single_rgroup"].head(int(visual_cfg.get("num_supported_cases", 10))),
-        manifest_df[manifest_df["oracle_split"].isin(REJECT_SPLITS)].head(int(visual_cfg.get("num_reject_cases", 5))),
+        manifest_df[manifest_df["oracle_split"] == "global_pose_failure"].head(int(visual_cfg.get("num_global_pose_failure_cases", 3))),
+        manifest_df[manifest_df["oracle_split"] == "ambiguous_region"].head(int(visual_cfg.get("num_ambiguous_region_cases", 2))),
         manifest_df[manifest_df["oracle_split"] == "invalid_conformer"].head(int(visual_cfg.get("num_invalid_cases", 5))),
+        manifest_df[manifest_df["oracle_split"] == "near_miss_contact"].head(int(visual_cfg.get("num_near_miss_cases", 5))),
+        manifest_df[manifest_df["oracle_split"] == "duplicate_removed"].head(int(visual_cfg.get("num_duplicate_cases", 0))),
     ]
     result = pd.concat(parts, ignore_index=True) if parts else manifest_df.head(0)
     if result.empty:
@@ -672,7 +800,10 @@ def _write_visual_notes(path: Path, visual_df: pd.DataFrame) -> None:
         "# Phase 2 Visual QC Notes",
         "",
         "- status: pending_manual_review",
-        "- 自动结构 gates 已完成; 人工可视化判读需后续打开 listed SDF/sample 复核.",
+        "- 自动结构 gates 已完成; 本文件是明确的待人工检查清单, 尚未把任何 case 判定为人工 pass.",
+        "- 路径基准: `data/benchmarks/clashrepairbench_rg_artificial/v0_1/`.",
+        "- 推荐工具: PyMOL, ChimeraX 或 RDKit/Mol* 可视化原始 ligand SDF, failed ligand SDF 和 sample pkl.",
+        "- 判读项: target R-group 是否移动, scaffold 是否稳定, non-target R-groups 是否稳定, clash 是否位于 target 区域, invalid/global/near_miss 分类是否合理.",
         "",
         "## 1. Cases",
         "",
@@ -705,6 +836,8 @@ def _summary(manifest_df: pd.DataFrame, base_rows: list[dict[str, Any]], config:
         "phase1_report_root": str(phase1_report_root),
         "phase2_acceptance_status": "complete" if int(split_counts.get("supported_single_rgroup", 0)) > 0 else "incomplete",
         "visual_qc_status": "pending_manual_review",
+        "energy_delta_threshold_mode": str(config.get("chemistry", {}).get("energy_delta_threshold_mode", "record_only")),
+        "energy_delta_filter_interpretation": "record_only_not_hard_filter",
     }
 
 
@@ -727,6 +860,9 @@ def _write_completion_audit(report_root: Path, benchmark_root: Path, manifest_df
         ("predicted dominant not used as acceptance gate", "done"),
         ("invalid/reject/unsupported/duplicate reported", "done"),
         ("visual QC cases recorded", "done"),
+        ("visual QC manual review", "blocked"),
+        ("delta_sensitivity.csv has no empty columns", "done" if not any(str(column).strip() == "" for column in _delta_sensitivity_report(manifest_df).columns) else "missing"),
+        ("energy_delta stats/outliers reports", "done"),
     ]
     lines = [
         "# Phase 2 Completion Audit",
@@ -756,9 +892,16 @@ def _write_completion_audit(report_root: Path, benchmark_root: Path, manifest_df
             "",
             "## 4. Blocked",
             "",
-            "- visual_qc_manual_review: blocked, 需要人工打开抽样 SDF/sample 做可视化判读; 当前已生成 `visual_qc_cases.csv` 和 `visual_qc_notes.md`.",
+            "- visual_qc_manual_review: blocked. 当前已生成明确待人工检查清单 `visual_qc_cases.csv` 和 `visual_qc_notes.md`; 需要人工用 PyMOL/ChimeraX/RDKit 打开 `data/benchmarks/clashrepairbench_rg_artificial/v0_1/ligands/*_original.sdf`, `*_failed.sdf` 和对应 `samples/*.pkl` 判读. 该 blocked 不改变自动 gate 结论, 但阶段 3 正式报告前应完成抽样确认.",
             "",
-            "## 5. Phase 3 Preflight",
+            "## 5. Phase2 Closure Decision",
+            "",
+            "- Phase2 is accepted for controlled Phase3 locator / verifier preflight.",
+            "- Phase2 v0_1 is a controlled artificial single-Rgroup clash benchmark, not validation of model-induced generation failures.",
+            "- Phase2.5 external validity audit will be handled separately and is not implemented here.",
+            "- Energy delta is a record-only ligand-only diagnostic in phase2_v0_1; it is not a hard acceptance filter.",
+            "",
+            "## 6. Phase 3 Preflight",
             "",
             "- 使用 `supported_single_rgroup` 作为 Top-1 / Top-3 主评估集.",
             "- 使用 reject/unsupported/near_miss/duplicate split 单独统计分流表现.",

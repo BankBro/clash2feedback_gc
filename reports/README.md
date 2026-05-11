@@ -52,9 +52,22 @@
 - `duplicate_cases.csv`
 - `near_miss_cases.csv`
 - `delta_sensitivity.csv`
+- `energy_delta_stats.csv`
+- `energy_delta_outliers.csv`
 - `difficulty_bins.csv`
 - `visual_qc_cases.csv`
 - `visual_qc_notes.md`
 - `phase2_completion_audit.md`
 
-这些报告记录 artificial R-group clash benchmark 的构造尝试, split 统计, 数据质量 gates, visual QC 抽样和最终审计结果.
+这些报告记录 artificial R-group clash benchmark 的构造尝试, split 统计, 数据质量 gates, energy_delta record-only 诊断, visual QC 待人工检查清单和最终审计结果.
+
+`reports/phase2_visual_qc/` 由 `scripts/phase2_render_visual_qc_images.py` 生成:
+
+- `asset_manifest.csv`
+- `render_manifest.csv`
+- `contact_sheets.csv`
+- `by_category_index.csv`
+- `manual_review_template.csv`
+- `phase2_visual_qc_render_summary.md`
+
+这些文件索引 `runs/phase2_visual_qc/` 下的 ChimeraX PNG/contact sheet 运行产物, 用于人工 visual QC 判读. 默认 contact sheets 覆盖四类主视图: `ligand_delta`, `overlay_sticks`, `overlay_surface`, `clash_pair_vdw`; `overlay_surface` 会为原始和失败 target R-group 原子叠加小球 marker, `overlay_sticks` 会用不同颜色区分配体侧碰撞点, 蛋白侧碰撞点和中心连线. 颜色词典在所有视图间保持一致: target failed 为青色, target displacement 为绿色, 配体碰撞为红色, 蛋白碰撞为蓝色, 碰撞连线为深灰色. `by_category_index.csv` 对应 `runs/phase2_visual_qc/by_oracle_split/`, `by_injection_mode/`, `by_oracle_split_and_mode/` 三套软链接索引, 用来按 oracle split 和 injection mode 快速浏览 case. `clash` 和 `rgroup` 可作为可选调试视图. 默认每类先采样 1024 个候选方向, 再选 12 个 clear-view; 候选数记录在 `asset_manifest.csv` 和 `render_manifest.csv` 的 `candidate_directions` 列. R 基位移线中点记录在 `render_manifest.csv` 的 `camera_target` 列, 相机视线与位移线的无方向夹角记录在 `displacement_axis_angle_degrees` 和 `displacement_axis_angle_gate_pass` 列, 合格范围为 30 到 90 度. 自动渲染不替代人工 pass/fail 结论.

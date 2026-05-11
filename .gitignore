@@ -24,6 +24,8 @@ data/benchmarks/*/v*/ligands/*.sdf
 reports/phase0/*.csv
 reports/phase0/*.json
 runs/phase0_visual_check/
+runs/phase2_visual_qc/
+runs/phase2_visual_qc_trial/
 
 # Temporary local work
 tmp/**

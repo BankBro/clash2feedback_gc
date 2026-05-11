@@ -6,7 +6,7 @@ import subprocess
 from dataclasses import dataclass, replace
 from pathlib import Path
 from shutil import which
-from typing import Iterable
+from typing import Callable, Iterable
 
 import numpy as np
 
@@ -576,6 +576,7 @@ def select_clear_camera_views(
     view: str = "overview",
     num_views: int = DEFAULT_NUM_CLEAR_VIEWS,
     num_candidates: int = DEFAULT_CANDIDATE_DIRECTIONS,
+    camera_filter: Callable[[CameraView], bool] | None = None,
 ) -> list[CameraView]:
     sample_path = Path(sample_dir)
     if view not in DEFAULT_VIEWS:
@@ -610,6 +611,10 @@ def select_clear_camera_views(
         selected.append(candidate)
 
     ranked = sorted(selected, key=lambda item: item.score, reverse=True)
+    if camera_filter is not None:
+        filtered = [candidate for candidate in ranked if camera_filter(candidate)]
+        if filtered:
+            ranked = filtered
     diverse = _select_clear_views_by_quality(ranked, view=view, num_views=max(1, int(num_views)))
     return [
         replace(

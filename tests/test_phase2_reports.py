@@ -28,10 +28,62 @@ def test_delta_sensitivity_report_counts_status() -> None:
         [
             {"delta03_status": "target_severe", "delta04_status": "target_severe", "delta05_status": "no_target_severe"},
             {"delta03_status": "no_target_severe", "delta04_status": "target_severe", "delta05_status": "no_target_severe"},
+            {"delta03_status": "", "delta04_status": "", "delta05_status": ""},
         ]
     )
     report = module._delta_sensitivity_report(df)
     assert set(report["delta_angstrom"]) == {0.3, 0.4, 0.5}
+    assert all(str(column).strip() for column in report.columns)
+    assert "unsupported_or_unavailable" in report.columns
+    assert report["unsupported_or_unavailable"].sum() == 3
+
+
+def test_energy_delta_reports_are_record_only_summaries() -> None:
+    module = _phase2_module()
+    df = pd.DataFrame(
+        [
+            {
+                "case_id": "case_000001",
+                "oracle_split": "supported_single_rgroup",
+                "injection_mode": "easy_rotation",
+                "target_rgroup": "R1",
+                "forcefield_type": "MMFF",
+                "energy_original": 1.0,
+                "energy_failed": 2.0,
+                "energy_delta": 1.0,
+                "ligand_valid": True,
+                "ligand_internal_severe_clash_count": 0,
+                "target_num_severe_pairs": 1,
+                "max_clash_depth": 0.6,
+                "sample_path": "samples/case_000001.pkl",
+                "failed_ligand_sdf": "ligands/case_000001_failed.sdf",
+            },
+            {
+                "case_id": "case_000002",
+                "oracle_split": "supported_single_rgroup",
+                "injection_mode": "easy_rotation",
+                "target_rgroup": "R1",
+                "forcefield_type": "MMFF",
+                "energy_original": 1.0,
+                "energy_failed": 100.0,
+                "energy_delta": 99.0,
+                "ligand_valid": True,
+                "ligand_internal_severe_clash_count": 0,
+                "target_num_severe_pairs": 1,
+                "max_clash_depth": 0.7,
+                "sample_path": "samples/case_000002.pkl",
+                "failed_ligand_sdf": "ligands/case_000002_failed.sdf",
+            },
+        ]
+    )
+
+    stats = module._energy_delta_stats_report(df)
+    outliers = module._energy_delta_outliers_report(df)
+
+    assert "num_large_positive_delta" in stats.columns
+    assert int(stats["num_large_positive_delta"].sum()) == 1
+    assert "energy_delta_strict_pass" in outliers.columns
+    assert not bool(outliers.loc[outliers["case_id"] == "case_000002", "energy_delta_strict_pass"].iloc[0])
 
 
 def test_supported_cases_csv_filter_semantics() -> None:
