@@ -1,0 +1,88 @@
+schema_version: "phase2_5_v0_1"
+seed: 20260511
+
+inputs:
+  processed_root: "data/processed/v0_1"
+  manifest: "data/processed/v0_1/manifest.parquet"
+  splits_root: "data/splits/v0_1"
+  phase1_report_root: "reports/phase1_clash_detector"
+  phase2_benchmark_root: "data/benchmarks/clashrepairbench_rg_artificial/v0_1"
+
+outputs:
+  run_root: "runs/phase2_5_model_induced_audit"
+  report_root: "reports/phase2_5_model_induced_audit"
+
+baseline:
+  model_name: "DiffSBDD"
+  checkpoint_name: "crossdocked_fullatom_cond.ckpt"
+  checkpoint_path: "external/DiffSBDD/checkpoints/crossdocked_fullatom_cond.ckpt"
+  checkpoint_url: "https://zenodo.org/records/8183747/files/crossdocked_fullatom_cond.ckpt?download=1"
+  external_repo: "external/DiffSBDD"
+  external_repo_url: "https://github.com/arneschneuing/DiffSBDD.git"
+  external_repo_commit: "5d0d38d16c8932a0339fd2ce3f67ade98bbdff27"
+  external_setup_report: "reports/phase2_5_model_induced_audit/external_setup.json"
+  conda_env: "diffsbdd"
+  python_executable: "python"
+  mode: "frozen_inference_only"
+  n_samples_per_pocket: 20
+  sanitize: false
+  relax: false
+  num_gpus: 2
+  run_generation_when_available: true
+
+overlap:
+  official_split_files:
+    train: ""
+    val: ""
+    test: ""
+  local_crossdocked_test_root: "data/cache/crossdocked_downloads/THU-ATOM/crossdocked/crossdocked_test"
+
+selection:
+  preferred_base_splits: ["val", "test"]
+  max_pockets_v0: 10
+  preferred_overlap_tiers:
+    - "T3_official_diffsbdd_test"
+    - "T4_external_unseen"
+    - "T_unknown"
+  exclude_from_external_main:
+    - "T0_exact_pair_seen"
+    - "T1_same_pocket_or_target_seen"
+
+postprocess:
+  stages:
+    - "raw_generated"
+    - "standardized_generated"
+  do_not_default_relax: true
+  do_not_default_redock: true
+  do_not_default_complex_minimize: true
+
+ligand_validity:
+  min_heavy_atoms: 5
+  max_heavy_atoms: 80
+  allowed_elements: ["C", "N", "O", "S", "P", "F", "Cl", "Br", "I", "H"]
+  require_single_fragment: true
+  require_3d: true
+  ligand_internal_delta_angstrom: 0.4
+  ligand_internal_severe_depth_threshold_angstrom: 0.4
+  ligand_internal_severe_clash_allowed: 0
+  forcefield_preference: ["MMFF", "UFF"]
+
+detector:
+  receptor_scope: "pocket10_all_atoms"
+  default_delta_angstrom: 0.4
+  delta_sensitivity: [0.3, 0.4, 0.5]
+  severe_depth_threshold_angstrom: 0.4
+  rgroup_score_alpha: 0.5
+  single_region_dominant_ratio: 0.7
+  ambiguous_region_dominant_ratio: 0.5
+  global_pose_max_depth_angstrom: 1.5
+  global_pose_severe_pair_count: 20
+
+constraints:
+  do_not_train: true
+  do_not_repair: true
+  do_not_tune: true
+  do_not_rank_baselines: true
+  do_not_modify_phase2_v0_1: true
+  do_not_mix_model_induced_into_phase3_main: true
+  do_not_use_predicted_dominant_as_oracle: true

@@ -1,0 +1,81 @@
+# External Baselines
+
+## 1. 目的
+
+本文档记录 Clash2Feedback-GC 使用过或计划使用的外部 frozen baseline 的长期可复现信息。
+
+外部仓库和 checkpoint 默认放在 `external/` 下, 但这些重资产不提交 Git。后续阅读仓库时, 应先从本文档确认外部代码来源, commit, checkpoint 和关键入口文件。
+
+## 2. DiffSBDD
+
+### 2.1 Source Provenance
+
+```text
+Model: DiffSBDD
+Source repo: https://github.com/arneschneuing/DiffSBDD.git
+Pinned commit: 5d0d38d16c8932a0339fd2ce3f67ade98bbdff27
+Local path: external/DiffSBDD/
+Primary entrypoint: external/DiffSBDD/generate_ligands.py
+Conda environment: diffsbdd
+Mode in this project: frozen inference only
+```
+
+关键源码路径:
+
+```text
+external/DiffSBDD/generate_ligands.py
+external/DiffSBDD/lightning_modules.py::LigandPocketDDPM.generate_ligands
+external/DiffSBDD/analysis/molecule_builder.py::build_molecule
+external/DiffSBDD/analysis/molecule_builder.py::process_molecule
+external/DiffSBDD/utils.py::write_sdf_file
+```
+
+### 2.2 Checkpoint Provenance
+
+```text
+Checkpoint name: crossdocked_fullatom_cond.ckpt
+Checkpoint URL: https://zenodo.org/records/8183747/files/crossdocked_fullatom_cond.ckpt?download=1
+Local path: external/DiffSBDD/checkpoints/crossdocked_fullatom_cond.ckpt
+MD5: 166b0c056b31ffdf31d489a63e91e05b
+SHA256: 07f86764bf569aafbc40a9c15fc02de8e2550437dd0f17f657eab3abe66c372c
+File size: 17861341 bytes
+```
+
+### 2.3 Output Contract Used By Clash2Feedback-GC
+
+DiffSBDD core model samples ligand atom types and 3D coordinates conditioned on a protein pocket.
+
+```text
+protein pocket -> ligand atom types + 3D coordinates
+```
+
+DiffSBDD then builds RDKit molecules and writes SDF files:
+
+```text
+atom types + 3D coordinates -> inferred bonds -> RDKit molecule -> SDF
+```
+
+In Phase 2.5, Clash2Feedback-GC consumes DiffSBDD's generated SDF files, not the internal point-cloud tensors. The Phase 2.5 `raw_generated` stage means the SDF written by DiffSBDD `generate_ligands.py`.
+
+### 2.4 Rebuild Commands
+
+Prepare or refresh the external DiffSBDD dependency through the project wrapper:
+
+```bash
+conda run -n c2f_cpu python scripts/phase2_5_prepare_diffsbdd.py \
+  --config configs/phase2_5_model_induced_audit.yaml \
+  --report-root reports/phase2_5_model_induced_audit \
+  --run-root runs/phase2_5_model_induced_audit
+```
+
+The wrapper clones or checks `external/DiffSBDD/`, pins the commit, checks the checkpoint, verifies the `diffsbdd` environment and writes actual setup provenance to:
+
+```text
+reports/phase2_5_model_induced_audit/external_setup.json
+```
+
+## 3. 维护规则
+
+- 新增外部 baseline 时, 在本文档增加 source repo, pinned commit, local path, checkpoint provenance 和关键代码路径。
+- 外部源码, checkpoint 和生成缓存保留在 `external/` 或 `runs/`, 默认不提交 Git。
+- 单次实验的实际命令, GPU 状态, smoke test 和结果摘要写入 `reports/`, 不写入本文档。

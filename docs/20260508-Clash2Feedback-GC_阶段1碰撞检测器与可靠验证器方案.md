@@ -1023,6 +1023,12 @@ protein_clash_heatmap
 repair_verifier
 ```
 
+### 12.4 给阶段 2.5 的接口
+
+阶段 2.5 model-induced audit 会复用阶段 1 detector 和 R-group attribution, 但 generated ligand 没有人工 `target_rgroup`. 阶段 2.5 只能输出 `dominant_valid_rgroup`, `failure_type` 和 `repairability_proxy`, 不能把 predicted dominant 当作 oracle label.
+
+对于 generated ligand, 如果 scaffold/R-group decomposition 失败, 应标记 `rgroup_unattributable` 或 `unsupported`, 不得强行归因.
+
 ---
 
 ## 13. docs 中需要同步强调的内容

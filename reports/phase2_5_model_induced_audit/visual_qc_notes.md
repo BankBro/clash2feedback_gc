@@ -1,0 +1,32 @@
+# Phase 2.5 Visual QC Notes
+
+- status: pending_manual_review
+- 本文件只记录抽样清单和阻塞状态, 不把自动分类解释为人工 pass.
+- blocked: official_diffsbdd_or_pocket2mol_split_unavailable
+
+## 1. Cases
+
+- complex_crossdocked_000026__cand_0006: valid_no_severe_clash, pending_manual_review
+- complex_crossdocked_000026__cand_0006: valid_no_severe_clash, pending_manual_review
+- complex_crossdocked_000026__cand_0011: valid_no_severe_clash, pending_manual_review
+- complex_crossdocked_000026__cand_0011: valid_no_severe_clash, pending_manual_review
+- complex_crossdocked_000026__cand_0013: valid_no_severe_clash, pending_manual_review
+- complex_crossdocked_000026__cand_0001: ligand_only_invalid, pending_manual_review
+- complex_crossdocked_000026__cand_0001: ligand_only_invalid, pending_manual_review
+- complex_crossdocked_000026__cand_0004: ligand_only_invalid, pending_manual_review
+- complex_crossdocked_000026__cand_0004: ligand_only_invalid, pending_manual_review
+- complex_crossdocked_000026__cand_0008: ligand_only_invalid, pending_manual_review
+- complex_crossdocked_000007__cand_0015: single_rgroup_clash, pending_manual_review
+- complex_crossdocked_000007__cand_0015: single_rgroup_clash, pending_manual_review
+- complex_crossdocked_000026__cand_0019: global_pose_failure, pending_manual_review
+- complex_crossdocked_000026__cand_0019: global_pose_failure, pending_manual_review
+- complex_crossdocked_000028__cand_0016: global_pose_failure, pending_manual_review
+- complex_crossdocked_000028__cand_0016: global_pose_failure, pending_manual_review
+- complex_crossdocked_000028__cand_0017: global_pose_failure, pending_manual_review
+- complex_crossdocked_000026__cand_0005: scaffold_clash, pending_manual_review
+- complex_crossdocked_000026__cand_0005: scaffold_clash, pending_manual_review
+- complex_crossdocked_000027__cand_0001: scaffold_clash, pending_manual_review
+- complex_crossdocked_000027__cand_0001: scaffold_clash, pending_manual_review
+- complex_crossdocked_000028__cand_0013: scaffold_clash, pending_manual_review
+- complex_crossdocked_000002__cand_0018: rgroup_unattributable, pending_manual_review
+- complex_crossdocked_000002__cand_0018: rgroup_unattributable, pending_manual_review

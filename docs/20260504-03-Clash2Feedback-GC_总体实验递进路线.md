@@ -101,6 +101,7 @@ Binding Success Rate
 | 阶段 0 | 环境与数据格式打通 | 统一 protein、ligand、pocket、scaffold、R-groups、anchors 数据格式 | 否 | 否 | processed clean complexes | `data/processed/v0_1/` |
 | 阶段 1 | 碰撞检测器与可靠验证器 | 判断哪里发生碰撞、修复后是否真正成功 | 否 | 否 | clash detector、repair verifier | `src/clash2feedback/geometry/`、`src/clash2feedback/verifier/`、`reports/phase1_clash_detector/` |
 | 阶段 2 | 人工局部碰撞注入 | 构建带真实失败区域标签的数据 | 否 | 否 | ClashRepairBench-RG-artificial | `data/benchmarks/clashrepairbench_rg_artificial/v0_1/` |
+| 阶段 2.5 | 模型诱导失败外部有效性审计 | 审计 frozen generation baseline 的真实 failure distribution, 判断阶段 2 artificial benchmark 覆盖的真实失败子分布 | 否 | 是, 仅 frozen inference | model-induced failure taxonomy / gap analysis | `reports/phase2_5_model_induced_audit/`, `runs/phase2_5_model_induced_audit/` |
 | 阶段 3 | 规则版定位与反馈 | 验证规则 locator 能否找对失败 R-group | 否 | 否 | 规则定位结果表 | `reports/phase3_rule_locator/` |
 | 阶段 4 | 冻结生成器最小修复闭环 | 验证局部再生成是否能救回部分失败候选 | 否 | 是 | Random / Mask / Feedback / Oracle 对照 | `runs/phase4_rule_repair/`、`reports/phase4_rule_repair/` |
 | 阶段 5 | 候选池与修复排序器 | 训练排序器，从多个候选中选最可能成功的修复 | 是 | 是 | candidate pool、ranker | `data/candidate_pools/v0_1/`、`runs/phase5_ranker/` |
@@ -487,6 +488,14 @@ reports/phase2_injection/
 | protein_clash_heatmap | 蛋白侧碰撞热区 |
 | clash_severity | 碰撞严重度 |
 | dominant_ratio | 单区域主导程度 |
+
+### 5.7 阶段 2.5 模型诱导失败外部有效性审计
+
+阶段 2.5 使用 frozen DiffSBDD baseline 做 model-induced failure external validity audit. 它先对 phase0/phase1 clean pockets 做 training-overlap audit, 再在可解释的 base pockets 上生成 candidates, 并对 all generated samples 做 ligand validity, protein-ligand clash, R-group attribution, failure taxonomy, repairability proxy 和 artificial-vs-model-induced gap analysis.
+
+阶段 2.5 不训练模型, 不做 repair, 不调参, 不做 baseline ranking, 不回改 `phase2_v0_1`. Generated ligand 没有人工 `target_rgroup`; predicted dominant R-group 只能作为 candidate local repair region, 不能作为 oracle ground truth 或阶段 3 Top-1 / Top-3 标签.
+
+如果 DiffSBDD 仓库, checkpoint, official split, GPU 或数据缺失, 阶段 2.5 必须明确写 blocked 原因, 不编造 generation / taxonomy 结果. 阶段 2.5 不阻塞阶段 3; 阶段 3 主评估仍只使用 phase2 `supported_single_rgroup`.
 
 ---
 
@@ -911,6 +920,8 @@ scripts/phase7_train_adapter.py
 ### 11.1 目标
 
 验证方法不只适用于人工注入失败，也能处理真实生成模型产生的局部失败候选。
+
+阶段 2.5 只审计 model-induced failures 的分布, 不做 repair; 阶段 8 才评估 model-induced failures 上的完整修复流程和 Reliable Repair Yield.
 
 ### 11.2 构造方式
 

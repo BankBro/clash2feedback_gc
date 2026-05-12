@@ -55,3 +55,27 @@ python scripts/phase2_render_visual_qc_images.py \
 `phase2_inject_artificial_clashes.py` 从阶段 0/1 clean base pose 出发, 枚举合法 single-anchor target R-group, 执行 `easy_rotation`, `torsion_perturb`, `directed_clash`, 复用阶段 1 detector / attribution 分配 oracle split, 并输出 benchmark, reports 和 completion audit. `delta_sensitivity.csv` 使用显式状态列, `energy_delta_*` 只作为 record-only ligand-only 诊断报告. 阶段 2 不调用生成器, 不做 repair, 不做 whole complex minimization.
 
 `phase2_render_visual_qc_images.py` 读取阶段 2 `visual_qc_cases.csv` 和 benchmark manifest, 复用阶段 0 clear-view 视角选择算法, 默认先采样 1024 个候选方向, 再为每类主视图选出 12 个去遮挡视角. 阶段 2 会以 target R-group 位移线中点为 camera target, 并在最终选择前加入 target 位移轴角度约束: 相机视线与 R 基位移线的无方向夹角必须在 30 到 90 度之间. 渲染脚本会在每张图保存前把 camera 光轴平移到该中点, 避免只对齐方向但画面中心偏离 target. 默认 contact sheets 缩为 `ligand_delta`, `overlay_sticks`, `overlay_surface`, `clash_pair_vdw` 四类; `overlay_surface` 会为原始和失败 target R-group 原子叠加小球 marker, `overlay_sticks` 会用不同颜色区分配体侧碰撞点, 蛋白侧碰撞点和中心连线. 渲染使用统一颜色词典: target failed 为青色, target displacement 为绿色, 配体碰撞为红色, 蛋白碰撞为蓝色, 碰撞连线为深灰色. 传入 `--skip-existing` 时, 已完整存在的 case/view 图组会复用, 只渲染缺失图组, 但报告和 contact sheets 仍会全量重写以保持索引一致. 脚本还会在 `runs/phase2_visual_qc/` 下生成 `by_oracle_split/`, `by_injection_mode/`, `by_oracle_split_and_mode/` 三套软链接索引, 并把对应关系写入 `reports/phase2_visual_qc/by_category_index.csv`. `clash` 和 `rgroup` 仍可通过 `--views` 显式渲染作为调试视图. 这些图只作为人工 visual QC 辅助, 不把自动渲染解释为人工 pass.
+
+## 5. 阶段 2.5 命令
+
+```bash
+python scripts/phase2_5_prepare_diffsbdd.py \
+  --config configs/phase2_5_model_induced_audit.yaml \
+  --report-root reports/phase2_5_model_induced_audit \
+  --run-root runs/phase2_5_model_induced_audit
+
+python scripts/phase2_5_training_overlap_audit.py \
+  --config configs/phase2_5_model_induced_audit.yaml \
+  --manifest data/processed/v0_1/manifest.parquet \
+  --output-root reports/phase2_5_model_induced_audit
+
+python scripts/phase2_5_model_induced_audit.py \
+  --config configs/phase2_5_model_induced_audit.yaml \
+  --manifest data/processed/v0_1/manifest.parquet \
+  --phase1-report-root reports/phase1_clash_detector \
+  --phase2-benchmark-root data/benchmarks/clashrepairbench_rg_artificial/v0_1 \
+  --run-root runs/phase2_5_model_induced_audit \
+  --report-root reports/phase2_5_model_induced_audit
+```
+
+阶段 2.5 使用 `c2f_cpu` 作为主控环境. `phase2_5_prepare_diffsbdd.py` 负责准备外部 DiffSBDD 仓库, checkpoint 和独立 `diffsbdd` conda 环境, 并把环境, GPU, checkpoint hash 和 smoke test 写入 `external_setup.json`. wrapper 先做 training-overlap audit, 再选择 clean base pockets, 然后在 DiffSBDD 仓库, checkpoint 和 `diffsbdd` 环境可用时执行 frozen inference. 如果 DiffSBDD, checkpoint, official split, GPU 或生成数据缺失, 脚本只生成 blocked audit 和 schema-valid 空报告, 不训练, 不 repair, 不调参, 不做 baseline ranking.

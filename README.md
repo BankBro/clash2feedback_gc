@@ -12,6 +12,10 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 
 阶段 2 方案详见 `docs/20260510-Clash2Feedback-GC_阶段2人工局部碰撞注入最终落地方案.md`. 阶段 2 构建 controlled synthetic failed pose benchmark, 不调用生成器, 不做 repair, 不做 whole protein-ligand complex minimization; 主评估集只使用 `supported_single_rgroup`.
 
+阶段 2.5 方案详见 `docs/20260511-Clash2Feedback-GC_阶段2.5模型诱导失败外部有效性审计落地方案.md`. 阶段 2.5 是 model-induced failure external validity audit: 使用 frozen generation baseline 生成 candidates, 审计 all generated samples 的 ligand validity, protein-ligand clash, R-group attribution, failure taxonomy 和 repairability proxy. 阶段 2.5 不训练模型, 不做 repair, 不做 baseline ranking, 不回改 `phase2_v0_1`, 也不把 model-induced samples 混入阶段 3 Top-1 / Top-3 主评估.
+
+外部 frozen baseline 的长期可复现入口见 `docs/external_baselines.md`, 当前记录 DiffSBDD 的 source repo, pinned commit, checkpoint, 关键源码路径和输出口径.
+
 ## 2. 目录结构
 
 | 目录 | 说明 |
@@ -19,6 +23,7 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 | `docs/` | 方案文档和实验路线说明 |
 | `configs/` | 每个阶段的配置文件 |
 | `data/` | 原始数据, 处理数据, 数据划分, benchmark 和 candidate pool |
+| `external/` | 外部 baseline 仓库和公开 checkpoint 的本地副本 |
 | `reports/` | 各阶段生成的统计表, 图, summary 和检查报告 |
 | `runs/` | 日志, checkpoint, 生成候选等较重运行产物 |
 | `src/clash2feedback/` | 可复用 Python 包源码 |
@@ -33,6 +38,8 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 - 静态方案文档放在 `docs/`.
 - 实验报告放在 `reports/`.
 - 较重运行产物放在 `runs/`.
+- 外部 baseline 仓库和 checkpoint 放在 `external/`, 默认不提交 Git.
+- 外部 baseline 的 repo, commit, checkpoint 和关键代码路径统一登记在 `docs/external_baselines.md`.
 - 临时文件放在 `tmp/`, 必要的实验复盘 Markdown 按 `tmp/YYYYMMDD/` 日期子目录归档, 可以保留并提交.
 - 不使用顶层 `outputs/`.
 - 大型原始数据, processed sample 和运行生成报告默认不提交到 Git.
@@ -197,6 +204,50 @@ conda run -n c2f_cpu python scripts/phase2_inject_artificial_clashes.py \
 
 `predicted_dominant_*` 字段只记录阶段 1 attribution 结果, 不作为阶段 2 主集保留条件. 所有 injected variants 继承 base complex split.
 
-## 8. 协作说明
+## 8. 阶段 2.5 用法
+
+先准备 DiffSBDD 外部仓库, checkpoint 和独立 `diffsbdd` 环境:
+
+```bash
+conda run -n c2f_cpu python scripts/phase2_5_prepare_diffsbdd.py \
+  --config configs/phase2_5_model_induced_audit.yaml \
+  --report-root reports/phase2_5_model_induced_audit \
+  --run-root runs/phase2_5_model_induced_audit
+```
+
+再运行 training-overlap audit:
+
+```bash
+conda run -n c2f_cpu python scripts/phase2_5_training_overlap_audit.py \
+  --config configs/phase2_5_model_induced_audit.yaml \
+  --manifest data/processed/v0_1/manifest.parquet \
+  --output-root reports/phase2_5_model_induced_audit
+```
+
+再运行 model-induced audit wrapper:
+
+```bash
+conda run -n c2f_cpu python scripts/phase2_5_model_induced_audit.py \
+  --config configs/phase2_5_model_induced_audit.yaml \
+  --manifest data/processed/v0_1/manifest.parquet \
+  --phase1-report-root reports/phase1_clash_detector \
+  --phase2-benchmark-root data/benchmarks/clashrepairbench_rg_artificial/v0_1 \
+  --run-root runs/phase2_5_model_induced_audit \
+  --report-root reports/phase2_5_model_induced_audit
+```
+
+主要输出:
+
+- `reports/phase2_5_model_induced_audit/summary.json`
+- `reports/phase2_5_model_induced_audit/training_overlap_audit.csv`
+- `reports/phase2_5_model_induced_audit/base_pocket_selection.csv`
+- `reports/phase2_5_model_induced_audit/generation_manifest.parquet`
+- `reports/phase2_5_model_induced_audit/failure_taxonomy.csv`
+- `reports/phase2_5_model_induced_audit/phase2_5_completion_audit.md`
+- `runs/phase2_5_model_induced_audit/`
+
+若 DiffSBDD 仓库, checkpoint, official split, GPU 或生成数据缺失, 脚本会生成 schema-valid 报告并把原因写入 blocked, 不伪造 generation / taxonomy 结果.
+
+## 9. 协作说明
 
 修改仓库前先阅读根目录 `AGENTS.md`. 修改主目录内文件时, 同步阅读该目录下的 `AGENTS.md`.

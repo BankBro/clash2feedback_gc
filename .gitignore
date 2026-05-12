@@ -26,6 +26,12 @@ reports/phase0/*.json
 runs/phase0_visual_check/
 runs/phase2_visual_qc/
 runs/phase2_visual_qc_trial/
+runs/phase2_5_model_induced_audit/
+
+# External frozen baselines and checkpoints
+external/*
+!external/AGENTS.md
+!external/README.md
 
 # Temporary local work
 tmp/**

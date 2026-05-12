@@ -28,3 +28,11 @@ python scripts/phase0_render_visual_check_images.py --assets-root runs/phase0_vi
 默认每个样本生成 `overview`, `clash`, `rgroup`, `ligand` 四类视图, 每类包含 `clear_01` 到 `clear_12` 十二个少遮挡视角, 并生成对应的 `overview_contact_sheet.png`, `clash_contact_sheet.png`, `rgroup_contact_sheet.png`, `ligand_contact_sheet.png`. contact sheet 使用 `3 x 4` 排布, 单图默认保持 `1800 x 1400`, 拼图不降采样, 便于先扫整体再放大看细节. 每个 clear 视角都会先聚焦 ligand, 再按视图用途单独评分: `overview` 优先避免 protein surface 挡住 ligand, `clash` 优先展示 protein-ligand 近距离接触界面, `rgroup` 优先展示 scaffold/R-group/anchor 连接, `ligand` 优先展开 ligand 投影. `rgroup` 和 `ligand` 视图会缩小 scaffold/R-group marker, 避免 marker 球遮住 ligand 拆分关系. 非 ligand-only 图片会在渲染后识别 ligand 彩色区域和 protein 灰色区域, 自动旋转 PNG, 尽量让 protein pocket 落在 ligand 下方. 图片写入各样本目录的 `images/`, 无界面脚本写入 `headless_scripts/`, 汇总索引写入 `phase0_visual_check/render_manifest.csv`. clear-view 模式默认每张图单独启动一次 ChimeraX, 速度较慢但更稳定.
 
 轻量结论写入 `tmp/YYYYMMDD/*.md`; 运行生成的大图, raw 结构副本和脚本留在本目录本地使用, 默认不提交 Git.
+
+## 3. 阶段 2.5 产物
+
+- `phase2_5_model_induced_audit/raw_candidates/`: DiffSBDD frozen inference 原始 generated SDF.
+- `phase2_5_model_induced_audit/standardized_candidates/`: 标准化后的 generated SDF.
+- `phase2_5_model_induced_audit/logs/`: DiffSBDD 准备, smoke test 和 generation command stdout/stderr 日志.
+
+这些目录只保存运行产物. 轻量统计和 blocked 原因写入 `reports/phase2_5_model_induced_audit/`.

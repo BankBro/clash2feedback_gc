@@ -242,6 +242,8 @@ R
 | 生成器诱导失败样本 | `data/benchmarks/model_induced/v0_1/` | 验证真实生成失败场景下能否修复 |
 | 修复候选池 | `data/candidate_pools/v0_1/` | 训练排序器和反馈适配器 |
 
+模型诱导失败相关实验拆成两层: 阶段 2.5 是 model-induced failure audit, 只做 all generated samples taxonomy 和 phase2 coverage proxy; 阶段 8 才做 model-induced repair evaluation 和 repair outcome. BIBM 版中, 阶段 2.5 可作为 external validity evidence, 说明 artificial single-Rgroup clash benchmark 不是凭空构造, 而是在 frozen SBDD baseline 的 generated failures 中存在对应子分布. 但阶段 2.5 不应被表述为 repair success evidence.
+
 ---
 
 ## 5. 数据来源选择
@@ -299,6 +301,8 @@ PDBBind / RCSB PDB 少量样本：外部真实性检查，可选
 | clean complexes | 80–120 个 |
 | 人工失败样本 | 300–600 个 |
 | 模型诱导失败样本 | 50–100 个 |
+
+阶段 2.5 应预留两张报告表: `Phase2.5 model-induced failure taxonomy` 和 `Artificial vs model-induced distribution gap`. 字段包括 `ligand_only_invalid`, `valid_no_severe_clash`, `single_rgroup_clash`, `multi_region_clash`, `scaffold_clash`, `global_pose_failure`, `rgroup_unattributable`, `local_rgroup_repair_possible`.
 
 投稿版本可进一步扩大，但不建议一开始追求大规模。
 
