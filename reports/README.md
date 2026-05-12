@@ -58,6 +58,7 @@
 - `visual_qc_cases.csv`
 - `visual_qc_notes.md`
 - `phase2_completion_audit.md`
+- `phase2_final_report.md`
 
 这些报告记录 artificial R-group clash benchmark 的构造尝试, split 统计, 数据质量 gates, energy_delta record-only 诊断, visual QC 待人工检查清单和最终审计结果.
 
