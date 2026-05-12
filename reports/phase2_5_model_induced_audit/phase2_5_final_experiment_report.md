@@ -1,6 +1,6 @@
 # Clash2Feedback-GC 阶段 2.5 最终实验报告: Frozen DiffSBDD 模型诱导失败审计
 
-## 1. Executive Summary
+## 1. 执行摘要
 
 阶段 2.5 的定位是 `model-induced failure audit`, 不是 repair 实验, 不是模型训练, 不是 baseline ranking, 也不是阶段 3 定位准确率主评估. 本阶段使用 frozen DiffSBDD baseline 在经过 training-overlap audit 的 clean base pockets 上生成候选分子, 记录 all generated samples, 并对 generated ligands 做 ligand validity, protein-ligand clash, R-group attribution, failure taxonomy, repairability proxy 和 artificial-vs-model-induced gap analysis.
 
@@ -10,9 +10,9 @@
 
 这不要求立即放弃 Clash2Feedback-GC 的 R-group local repair 主线, 但要求收窄论文 claim: 阶段 2 artificial `supported_single_rgroup` benchmark 应被表述为可控局部修复测试床, 不应被表述为全部 DiffSBDD de novo model-induced failure distribution 的代表样本. 当前最合理顺序是先归档并提交阶段 2.5 最终报告, 再开展阶段 4 最小修复闭环实验.
 
-## 2. Experiment Goal and Boundary
+## 2. 实验目标与边界
 
-阶段 2.5 目标是审计 frozen generation baseline 诱导出的真实候选分子失败分布, 用于回答一个外部有效性问题: 阶段 2 artificial single-Rgroup clash benchmark 与真实 model-induced failures 的关系是什么.
+阶段 2.5 的目标是审计 frozen generation baseline 诱导出的真实候选分子失败分布, 用于回答一个外部有效性问题: 阶段 2 artificial single-Rgroup clash benchmark 与真实 model-induced failures 的关系是什么.
 
 本阶段明确遵守以下边界:
 
@@ -28,61 +28,61 @@
 
 因此, 阶段 2.5 只能支持 failure taxonomy 和 distribution-gap 层面的结论, 不能作为 repair success evidence.
 
-## 3. Baseline and Reproducibility
+## 3. 基线模型与可复现信息
 
 本轮 baseline 和复现信息来自 `configs/phase2_5_model_induced_audit.yaml`, `docs/external_baselines.md`, `reports/phase2_5_model_induced_audit/external_setup.json` 和 `summary.json`.
 
-| item | value |
+| 项目 | 取值 |
 |---|---|
 | Baseline model | DiffSBDD |
-| Mode | frozen inference only |
-| External repo | `https://github.com/arneschneuing/DiffSBDD.git` |
-| Pinned commit | `5d0d38d16c8932a0339fd2ce3f67ade98bbdff27` |
-| Local source path | `external/DiffSBDD/` |
-| Primary entrypoint | `external/DiffSBDD/generate_ligands.py` |
+| 运行模式 | frozen inference only |
+| 外部仓库 | `https://github.com/arneschneuing/DiffSBDD.git` |
+| 固定 commit | `5d0d38d16c8932a0339fd2ce3f67ade98bbdff27` |
+| 本地源码路径 | `external/DiffSBDD/` |
+| 主要入口 | `external/DiffSBDD/generate_ligands.py` |
 | Checkpoint | `crossdocked_fullatom_cond.ckpt` |
 | Checkpoint MD5 | `166b0c056b31ffdf31d489a63e91e05b` |
 | Checkpoint SHA256 | `07f86764bf569aafbc40a9c15fc02de8e2550437dd0f17f657eab3abe66c372c` |
-| Checkpoint size | `17861341` bytes |
-| Main control env | `c2f_cpu` |
-| DiffSBDD env | `diffsbdd` |
-| CUDA available in DiffSBDD env | `true` |
-| GPU info | 2 x NVIDIA GeForce RTX 2080 Ti |
+| Checkpoint 文件大小 | `17861341` bytes |
+| 主控环境 | `c2f_cpu` |
+| DiffSBDD 环境 | `diffsbdd` |
+| DiffSBDD 环境 CUDA 可用 | `true` |
+| GPU 信息 | 2 x NVIDIA GeForce RTX 2080 Ti |
 
-DiffSBDD core model samples ligand atom types and 3D coordinates conditioned on a protein pocket. DiffSBDD then builds RDKit molecules and writes SDF files. Phase 2.5 consumes the final SDF files written by DiffSBDD, not the internal point-cloud tensors.
+DiffSBDD 核心模型以蛋白口袋为条件采样 ligand atom types 和 3D coordinates. 随后 DiffSBDD 会构建 RDKit molecule 并写出 SDF 文件. 阶段 2.5 消费的是 DiffSBDD 写出的最终 SDF 文件, 不是模型内部的 point-cloud tensor.
 
-## 4. Training-Overlap Audit
+## 4. 训练重叠审计
 
-Training-overlap audit was completed before generation. The audit covered 51 local processed pockets.
+训练重叠审计已在 generation 前完成. 本轮审计覆盖 51 个本地 processed pockets.
 
-| metric | value |
+| 指标 | 取值 |
 |---|---:|
-| Pockets audited | 51 |
+| 已审计 pockets | 51 |
 | `T_unknown` pockets | 51 |
-| External-validity eligible under current rules | 51 |
+| 当前规则下 external-validity eligible | 51 |
 | Same-source debug subset | 0 |
 | Official split available | `false` |
 
-The official DiffSBDD / Pocket2Mol split files were unavailable. As a result, every audited pocket was assigned to `T_unknown`. This means the current audit must be interpreted as a frozen DiffSBDD model-induced failure audit under unknown training-overlap status. It must not be described as strict external-unseen evaluation.
+官方 DiffSBDD / Pocket2Mol split 文件缺失. 因此, 所有已审计 pocket 均被标记为 `T_unknown`. 这意味着当前结果只能解释为 unknown training-overlap status 下的 frozen DiffSBDD model-induced failure audit, 不能解释为 strict external-unseen evaluation.
 
-The blocked reason recorded in `summary.json` and `phase2_5_completion_audit.md` is:
+`summary.json` 和 `phase2_5_completion_audit.md` 记录的 blocked reason 为:
 
 ```text
 official_diffsbdd_or_pocket2mol_split_unavailable
 ```
 
-## 5. Base Pocket Selection
+## 5. 基础 Pocket 选择
 
-The generation subset selected 10 base pockets from `base_pocket_selection.csv`. The selected pockets all had `overlap_tier=T_unknown` and were selected from local `val` and `test` splits.
+生成子集从 `base_pocket_selection.csv` 中选择了 10 个 base pockets. 这些 selected pockets 全部为 `overlap_tier=T_unknown`, 来源于本项目本地 `val` 和 `test` split.
 
-| selected base pockets | value |
+| selected base pockets | 取值 |
 |---|---:|
-| Total selected pockets | 10 |
-| Selected `val` pockets | 3 |
-| Selected `test` pockets | 7 |
-| Selected `T_unknown` pockets | 10 |
+| selected pockets 总数 | 10 |
+| selected `val` pockets | 3 |
+| selected `test` pockets | 7 |
+| selected `T_unknown` pockets | 10 |
 
-Selected pockets:
+Selected pockets 清单:
 
 | base_sample_id | base_split | target_id |
 |---|---|---|
@@ -97,50 +97,50 @@ Selected pockets:
 | `complex_crossdocked_000006` | test | `CDGT2_BACCI_28_713_0` |
 | `complex_crossdocked_000007` | test | `CDGT2_BACCI_28_713_0` |
 
-Because all selected pockets are `T_unknown`, the selected set is useful for frozen model-induced audit, but not sufficient for strict external-unseen claims.
+因为所有 selected pockets 都是 `T_unknown`, 这组样本可以用于 frozen model-induced audit, 但不足以支持 strict external-unseen claim.
 
-## 6. Generation and Audit Stages
+## 6. 生成规模与审计阶段
 
-Generation scale:
+生成规模:
 
 ```text
 10 selected pockets x 20 candidates per pocket = 200 unique candidates
 ```
 
-Audit stages:
+审计阶段:
 
 ```text
 raw_generated
 standardized_generated
 ```
 
-The `standardized_generated` stage is an audit-stage view of the same generated molecule, not a second independent generated molecule. In this project implementation, it copies the RDKit molecule and, if multiple fragments exist, keeps the largest heavy-atom fragment. This is not repair, not relaxation, not redocking, and not complex minimization.
+`standardized_generated` 是同一批 generated molecules 的审计阶段视图, 不是第二批独立生成分子. 在当前项目实现中, 它会复制 RDKit molecule, 如果出现 multiple fragments 则保留 heavy atoms 数最多的最大 fragment. 这不是 repair, 不是 relaxation, 不是 redocking, 也不是 complex minimization.
 
-Observed audit table sizes:
+已观察到的审计表规模:
 
-| table | rows | unique candidate_id | notes |
+| 表 | rows | unique candidate_id | 说明 |
 |---|---:|---:|---|
 | `generation_manifest.parquet` | 400 | 200 | 200 raw + 200 standardized |
-| `failure_taxonomy.csv` | 400 | 200 | one taxonomy row per candidate per stage |
-| `ligand_validity.csv` | 400 | 200 | one validity row per candidate per stage |
-| `repairability_proxy.csv` | 400 | 200 | one proxy row per candidate per stage |
-| `model_induced_clash_report.csv` | 240 | 120 | valid ligand rows only, raw + standardized |
+| `failure_taxonomy.csv` | 400 | 200 | 每个 candidate 每个 stage 一行 taxonomy |
+| `ligand_validity.csv` | 400 | 200 | 每个 candidate 每个 stage 一行 validity |
+| `repairability_proxy.csv` | 400 | 200 | 每个 candidate 每个 stage 一行 proxy |
+| `model_induced_clash_report.csv` | 240 | 120 | 仅 ligand-valid rows, raw + standardized |
 
-Raw vs standardized consistency:
+Raw 与 standardized 一致性:
 
-| check | value |
+| 检查项 | 取值 |
 |---|---:|
-| Paired unique candidates | 200 |
-| Taxonomy changed after standardization | 0 |
-| Ligand validity changed after standardization | 0 |
-| Raw `num_fragments=1` candidates | 200 |
-| Standardized `num_fragments=1` candidates | 200 |
+| paired unique candidates | 200 |
+| standardization 后 taxonomy 变化 | 0 |
+| standardization 后 ligand validity 变化 | 0 |
+| raw `num_fragments=1` candidates | 200 |
+| standardized `num_fragments=1` candidates | 200 |
 
-Therefore, downstream biological and experimental interpretation should use the 200-candidate unique view. The 400-row view is useful for checking audit completeness and stage consistency.
+因此, 下游生物学解释和论文叙事应使用 200-candidate unique view. 400-row view 主要用于检查审计完整性和 stage 一致性.
 
-## 7. Unique-Candidate Failure Taxonomy
+## 7. Unique-Candidate 口径失败分类
 
-The unique-candidate taxonomy below is computed by taking the `raw_generated` row for each `candidate_id` from `failure_taxonomy.csv`. This is valid here because raw and standardized taxonomy labels are identical for all 200 candidates.
+下表的 unique-candidate taxonomy 由 `failure_taxonomy.csv` 中每个 `candidate_id` 的 `raw_generated` row 计算得到. 本轮 raw 和 standardized taxonomy labels 对全部 200 个 candidate 完全一致, 所以使用 raw row 作为 unique representative 是合理的.
 
 | failure_taxonomy | unique count | ratio |
 |---|---:|---:|
@@ -152,7 +152,7 @@ The unique-candidate taxonomy below is computed by taking the `raw_generated` ro
 | `rgroup_unattributable` | 1 | 0.5% |
 | `single_rgroup_clash` | 1 | 0.5% |
 
-Audit-row taxonomy counts from `summary.json` are exactly doubled for stage-invariant labels because each candidate appears once in `raw_generated` and once in `standardized_generated`.
+`summary.json` 中的 audit-row taxonomy counts 因为每个 candidate 同时有 `raw_generated` 和 `standardized_generated` 两行, 所以对 stage-invariant labels 来说正好是 unique count 的两倍.
 
 | audit-row metric | value |
 |---|---:|
@@ -162,18 +162,18 @@ Audit-row taxonomy counts from `summary.json` are exactly doubled for stage-inva
 | `num_near_miss_contact` | 62 |
 | `num_with_severe_clash` | 30 |
 
-The most important result is that local single-Rgroup severe clash is very rare in this DiffSBDD de novo audit: only 1 out of 200 unique candidates. The single case is `complex_crossdocked_000007__cand_0015`, with dominant predicted R-group `R2`, `num_severe_clash_pairs=1`, and `max_clash_depth=0.40536`. Its `repairability_proxy` is still `reject`, so this audit does not establish a reliable model-induced local repair subset.
+最重要的结果是: local single-Rgroup severe clash 在本轮 DiffSBDD de novo audit 中非常少, 只有 `1 / 200` unique candidates. 唯一 case 是 `complex_crossdocked_000007__cand_0015`, 其 dominant predicted R-group 为 `R2`, `num_severe_clash_pairs=1`, `max_clash_depth=0.40536`. 但它的 `repairability_proxy` 仍然是 `reject`, 因此本轮 audit 没有形成可靠的 model-induced local repair subset.
 
-## 8. Ligand Validity and Clash Results
+## 8. 配体有效性与 Clash 结果
 
-Unique ligand validity is computed from `ligand_validity.csv` using the `raw_generated` row per candidate.
+Unique-candidate 口径的 ligand validity 由 `ligand_validity.csv` 中每个 candidate 的 `raw_generated` row 计算得到.
 
 | ligand validity | unique count | ratio |
 |---|---:|---:|
 | valid | 120 | 60.0% |
 | invalid | 80 | 40.0% |
 
-Invalidity reasons in the raw unique view:
+Raw unique view 中的 invalidity reasons:
 
 | ligand_validity_reason | unique count |
 |---|---:|
@@ -182,9 +182,9 @@ Invalidity reasons in the raw unique view:
 | `heavy_atom_count_out_of_range` | 3 |
 | `rdkit_sanitize_failed;ligand_internal_severe_clash` | 1 |
 
-Clash reports were generated only for ligand-valid candidates, producing 120 unique candidates and 240 audit rows across raw and standardized stages. In the 200 unique-candidate taxonomy, severe protein-ligand clash categories comprise 15 candidates: 1 `single_rgroup_clash`, 6 `scaffold_clash`, and 8 `global_pose_failure`.
+Clash 报告只对 ligand-valid candidates 生成, 因此覆盖 120 个 unique candidates, 对应 raw 和 standardized 两阶段共 240 audit rows. 在 200 unique-candidate taxonomy 中, severe protein-ligand clash categories 共 15 个 candidates: 1 个 `single_rgroup_clash`, 6 个 `scaffold_clash`, 8 个 `global_pose_failure`.
 
-Repairability proxy in the raw unique view:
+Raw unique view 中的 repairability proxy:
 
 | repairability_proxy | unique count |
 |---|---:|
@@ -194,46 +194,46 @@ Repairability proxy in the raw unique view:
 | `unsupported` | 1 |
 | `local_rgroup_repair_possible` | 0 |
 
-The `phase2_coverage_proxy` in `summary.json` is `0.0`, consistent with the absence of `local_rgroup_repair_possible` rows.
+`summary.json` 中的 `phase2_coverage_proxy` 为 `0.0`, 与 `local_rgroup_repair_possible` rows 缺失一致.
 
-## 9. Artificial vs Model-Induced Gap
+## 9. Artificial 与 Model-Induced 分布差距
 
-The gap analysis compares the controlled Phase 2 artificial supported-single-Rgroup benchmark with the Phase 2.5 model-induced audit.
+分布差距分析比较了受控的阶段 2 artificial supported-single-Rgroup benchmark 和阶段 2.5 model-induced audit.
 
-From `artificial_vs_model_induced_gap.csv`, Phase 2 has 357 `phase2_supported_single_rgroup` cases in the reported numeric comparisons. These artificial cases are clean, controlled, have an oracle target R-group, and are suitable for local repair and localization evaluation.
+根据 `artificial_vs_model_induced_gap.csv`, 阶段 2 在 numeric comparisons 中包含 357 个 `phase2_supported_single_rgroup` cases. 这些 artificial cases 是 clean, controlled, 有 oracle target R-group, 适合用于 local repair 和 localization evaluation.
 
-The model-induced side contains only 1 unique `single_rgroup_clash` candidate, represented as 2 audit rows. Therefore, Phase 2 artificial supported-single-Rgroup cases should be interpreted as a controlled local-repair testbed, not as a representative sample of all DiffSBDD de novo failures.
+Model-induced 侧只有 1 个 unique `single_rgroup_clash` candidate, 在 audit-row 口径中表现为 2 行. 因此, 阶段 2 artificial supported-single-Rgroup cases 应被解释为 controlled local-repair testbed, 而不是全部 DiffSBDD de novo failures 的代表样本.
 
-The correct interpretation is:
+正确解释是:
 
-- Phase 2 artificial benchmark is still valuable because it gives a clean, controllable, oracle-labeled local repair problem.
-- Phase 2.5 shows that this problem is a rare subdistribution in the current DiffSBDD de novo complete-ligand audit.
-- The project should not claim that true DiffSBDD de novo failures are mainly R-group clashes.
-- The project can claim that it targets a classic, verification-friendly local steric clash subtype in scaffold-preserving local editing.
+- 阶段 2 artificial benchmark 仍然有价值, 因为它提供 clean, controllable, oracle-labeled local repair problem.
+- 阶段 2.5 表明, 该问题在当前 DiffSBDD de novo complete-ligand audit 中是稀有子分布.
+- 项目不应声称真实 DiffSBDD de novo failures 主要是 R-group clashes.
+- 项目可以声称自己研究 scaffold-preserving local editing 中一个经典, 可验证的 local steric clash subtype.
 
-## 10. Interpretation Caveats
+## 10. 解释限制
 
-### 10.1 Unknown Training-Overlap Status
+### 10.1 训练重叠状态未知
 
-Because official DiffSBDD / Pocket2Mol split files were unavailable, all audited pockets are `T_unknown`. The audit is valid as a frozen model-induced failure audit, but not as strict external-unseen evaluation.
+由于官方 DiffSBDD / Pocket2Mol split 文件缺失, 所有 audited pockets 均为 `T_unknown`. 本轮审计可以作为 frozen model-induced failure audit, 但不能作为 strict external-unseen evaluation.
 
-### 10.2 200 Unique Candidates vs 400 Audit Rows
+### 10.2 200 Unique Candidates 与 400 Audit Rows
 
-The 400 audit rows are generated by two postprocess-stage records per candidate:
+400 audit rows 来自每个 candidate 的两个 postprocess-stage records:
 
 ```text
 200 raw_generated rows + 200 standardized_generated rows = 400 audit rows
 ```
 
-They should not be interpreted as 400 independent generated molecules. Unique-candidate statistics in this report use one row per `candidate_id`, using `raw_generated` as the representative row because raw and standardized labels are identical in this run.
+这些 rows 不应解释为 400 个独立生成分子. 本报告的 unique-candidate statistics 使用每个 `candidate_id` 一行, 并使用 `raw_generated` 作为 representative row, 因为本轮 raw 与 standardized labels 完全一致.
 
-### 10.3 `global_pose_failure` Is Coarse
+### 10.3 `global_pose_failure` 是粗粒度标签
 
-The current `global_pose_failure` label is a coarse global-like / non-local severe failure bin. It is assigned when severe clashes are too deep or too numerous, or when a severe clash pattern does not safely satisfy clean local R-group or scaffold attribution criteria. In this run, all 8 unique `global_pose_failure` candidates have taxonomy reason `global_pose_threshold_exceeded`.
+当前 `global_pose_failure` 是一个 coarse global-like / non-local severe failure bin. 当 severe clashes 过深, 过多, 或 severe clash pattern 不能安全满足 clean local R-group 或 scaffold attribution criteria 时, 样本会被归到这个类别. 本轮 8 个 unique `global_pose_failure` candidates 的 taxonomy reason 全部是 `global_pose_threshold_exceeded`.
 
-This label must not be directly interpreted as definitive evidence that the entire ligand pose is globally misplaced. It may include deep local clashes, dense severe contact patterns, distributed multi-region failures, scaffold-near failures, attribution uncertainty, or true global placement errors. A finer subtype analysis would need additional geometry features and visual QC.
+这个标签不能直接解释为 ligand 整体 pose 一定放错. 它可能包含 deep local clashes, dense severe contact patterns, distributed multi-region failures, scaffold-near failures, attribution uncertainty, 或真正的 global placement errors. 若要进一步区分, 需要额外几何特征和 visual QC.
 
-Recommended future subtypes:
+后续可以考虑新增更细的 subtypes:
 
 - `deep_local_clash`
 - `dense_clash_failure`
@@ -242,78 +242,78 @@ Recommended future subtypes:
 - `out_of_pocket_failure`
 - `possible_coordinate_or_scope_issue`
 
-### 10.4 Predicted Dominant R-Group Is Not Oracle
+### 10.4 Predicted Dominant R-Group 不是 Oracle 标签
 
-Generated ligands do not have an oracle `target_rgroup`. The `dominant_valid_rgroup` field is an attribution output for taxonomy and proxy analysis only. It must not be treated as ground-truth target R-group, and it must not be used as a Stage 3 Top-1 / Top-3 oracle label.
+Generated ligands 没有 oracle `target_rgroup`. `dominant_valid_rgroup` 只是 attribution output, 只能用于 taxonomy 和 proxy analysis. 它不能被当作 ground-truth target R-group, 也不能用于阶段 3 Top-1 / Top-3 oracle label.
 
-### 10.5 Visual QC Is Pending
+### 10.5 人工可视化 QC 仍为 Pending
 
-`visual_qc_notes.md` records `pending_manual_review`. The automatic taxonomy has not been manually confirmed by visual inspection. The final report should not state that visual QC has passed.
+`visual_qc_notes.md` 记录的是 `pending_manual_review`. 当前 automatic taxonomy 尚未通过人工 visual inspection 确认. 最终报告不能写成 visual QC 已经通过.
 
-## 11. Implications for Research Direction
+## 11. 对研究方向的影响
 
-The research topic does not need to be abandoned immediately. However, the claim must be narrowed.
+研究课题不需要立刻放弃. 但论文 claim 必须收窄.
 
-The broad claim to avoid is:
-
-```text
-True de novo SBDD generation failures are mainly R-group clashes, and Phase 2 artificial R-group clashes represent the full model-induced failure distribution.
-```
-
-The defensible claim is:
+应避免的宽泛 claim 是:
 
 ```text
-Clash2Feedback-GC studies a classic, controllable, and verification-friendly local steric clash subtype in scaffold-preserving local editing: protein-ligand clashes localized to R-group regions.
+真实 de novo SBDD generation failures 主要是 R-group clashes, 且阶段 2 artificial R-group clashes 能代表完整 model-induced failure distribution.
 ```
 
-Phase 2.5 strengthens the project by clarifying the boundary: the Phase 2 artificial benchmark is not a proxy for all generated failures, but it remains a suitable testbed for evaluating whether structured clash feedback can guide local repair under reliable geometric criteria.
+当前更稳妥的 claim 是:
 
-## 12. Recommended Next Step: Phase 4 Minimal Repair Loop
+```text
+Clash2Feedback-GC 研究 scaffold-preserving local editing 中一个经典, 可控, 可验证的 local steric clash subtype: 定位到 R-group regions 的 protein-ligand clashes.
+```
 
-The current order should be:
+阶段 2.5 的价值在于澄清边界: 阶段 2 artificial benchmark 不是全部 generated failures 的 proxy, 但它仍然是评估 structured clash feedback 能否在 reliable geometric criteria 下指导 local repair 的合适测试床.
 
-1. Complete and submit this Phase 2.5 final report.
-2. Push the report to the remote branch.
-3. Then start Phase 4 minimal repair-loop experiments.
+## 12. 建议下一步: 阶段 4 最小修复闭环
 
-Phase 4 should not be started as part of this report task.
+当前顺序应为:
 
-Recommended Phase 4 direction:
+1. 完成并提交阶段 2.5 最终报告.
+2. 将报告推送到远端分支.
+3. 再启动阶段 4 minimal repair-loop experiments.
 
-- Use Phase 2 `supported_single_rgroup` cases as the controlled repair benchmark.
-- Compare random-mask repair, predicted-mask repair, and oracle/reference-mask repair.
-- Evaluate reliable repair yield, old-clash resolution, no-new-clash rate, scaffold RMSD, non-mask RMSD, and ligand validity.
-- Keep model-induced Phase 2.5 samples outside Stage 3 localization denominators unless a separate model-induced benchmark is formally defined.
+阶段 4 不应作为本报告任务的一部分启动.
 
-## 13. Paper-Writable Claims
+建议阶段 4 方向:
 
-The following claims are supported by the current repository results:
+- 使用阶段 2 `supported_single_rgroup` cases 作为 controlled repair benchmark.
+- 比较 random-mask repair, predicted-mask repair 和 oracle/reference-mask repair.
+- 评估 reliable repair yield, old-clash resolution, no-new-clash rate, scaffold RMSD, non-mask RMSD 和 ligand validity.
+- 除非另行正式定义 model-induced benchmark, 否则阶段 2.5 model-induced samples 不应进入阶段 3 localization denominators.
 
-- A frozen DiffSBDD baseline was successfully audited under a no-training, no-repair, no-ranking setting.
-- Training-overlap audit was performed before generation, and all generated samples were recorded.
-- The run generated 200 unique candidates from 10 selected pockets, with two audit stages per candidate.
-- Raw and standardized stages did not change validity or taxonomy labels in this run.
-- Under current unknown-overlap status, `single_rgroup_clash` was rare in the DiffSBDD de novo audit: 1 out of 200 unique candidates.
-- Phase 2 artificial supported-single-Rgroup cases are best interpreted as a controlled local-repair testbed.
-- The paper claim should focus on reliable local repair of a classic R-group-localized steric clash subtype, not on covering all de novo generation failures.
+## 13. 可写入论文的结论
 
-## 14. Conservative or Forbidden Claims
+当前仓库结果支持以下结论:
 
-The following claims should not be made:
+- Frozen DiffSBDD baseline 已在 no-training, no-repair, no-ranking 设置下完成审计.
+- Training-overlap audit 已在 generation 前执行, all generated samples 已记录.
+- 本轮从 10 个 selected pockets 生成 200 个 unique candidates, 每个 candidate 有两个 audit stages.
+- 本轮 raw 和 standardized stages 没有改变 validity 或 taxonomy labels.
+- 在当前 unknown-overlap status 下, `single_rgroup_clash` 在 DiffSBDD de novo audit 中很少: 1 / 200 unique candidates.
+- 阶段 2 artificial supported-single-Rgroup cases 更适合解释为 controlled local-repair testbed.
+- 论文 claim 应聚焦 classic R-group-localized steric clash subtype 的 reliable local repair, 不应声称覆盖所有 de novo generation failures.
 
-- This is a strict external-unseen evaluation.
-- DiffSBDD real de novo generation failures are mainly R-group clashes.
-- Phase 2.5 proves any repair method works.
-- 400 audit rows are 400 independent generated molecules.
-- Predicted dominant R-group is oracle ground truth.
-- `global_pose_failure` definitively means the entire ligand pose is globally misplaced.
-- Model-induced samples can be directly mixed into Stage 3 Top-1 / Top-3 main evaluation.
-- Phase 2 artificial benchmark represents the full model-induced failure distribution.
-- This run can be used for baseline ranking against other generators.
+## 14. 必须保守或禁止的结论
 
-## 15. Verification and Files
+以下结论不应写入论文或汇报:
 
-Primary report files used:
+- 本轮是 strict external-unseen evaluation.
+- DiffSBDD real de novo generation failures 主要是 R-group clashes.
+- 阶段 2.5 证明任何 repair 方法有效.
+- 400 audit rows 等于 400 independent generated molecules.
+- Predicted dominant R-group 是 oracle ground truth.
+- `global_pose_failure` 一定表示 ligand 整体 pose 放错.
+- Model-induced samples 可以直接混入阶段 3 Top-1 / Top-3 主评估.
+- 阶段 2 artificial benchmark 代表完整 model-induced failure distribution.
+- 本轮结果可用于与其他 generator 做 baseline ranking.
+
+## 15. 验证与文件
+
+本报告主要使用以下文件:
 
 - `reports/phase2_5_model_induced_audit/summary.json`
 - `reports/phase2_5_model_induced_audit/training_overlap_summary.json`
@@ -327,20 +327,19 @@ Primary report files used:
 - `reports/phase2_5_model_induced_audit/visual_qc_notes.md`
 - `reports/phase2_5_model_induced_audit/phase2_5_completion_audit.md`
 
-Completion audit records:
+Completion audit 记录:
 
 ```text
 compileall: passed: conda run -n c2f_cpu python -m compileall src scripts
 pytest: passed: 112 tests in 6.24s
 ```
 
-Sanity checks used for this final report:
+本最终报告使用的 sanity checks:
 
-- `failure_taxonomy.csv` covers 400 audit rows and 200 unique candidates.
-- `generation_manifest.parquet` contains 200 `raw_generated` rows and 200 `standardized_generated` rows.
+- `failure_taxonomy.csv` 覆盖 400 audit rows 和 200 unique candidates.
+- `generation_manifest.parquet` 包含 200 `raw_generated` rows 和 200 `standardized_generated` rows.
 - Raw vs standardized taxonomy changes: 0 / 200.
 - Raw vs standardized ligand-validity changes: 0 / 200.
-- `training_overlap_summary.json` records `official_split_available=false`.
-- `visual_qc_notes.md` remains `pending_manual_review`.
-- No-oracle-leakage is covered by `tests/test_phase2_5_no_oracle_leakage.py`.
-
+- `training_overlap_summary.json` 记录 `official_split_available=false`.
+- `visual_qc_notes.md` 仍为 `pending_manual_review`.
+- No-oracle-leakage 由 `tests/test_phase2_5_no_oracle_leakage.py` 覆盖.
