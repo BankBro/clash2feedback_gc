@@ -18,7 +18,8 @@
 
 ```text
 阶段 2 构造的 controlled artificial single-Rgroup clash benchmark，
-是否覆盖了真实生成模型失败中的一个重要子分布？
+与真实生成模型失败分布之间的差距有多大？
+它是否对应一个可解释但可能稀有的局部修复子问题？
 ```
 
 阶段 2.5 不回答：

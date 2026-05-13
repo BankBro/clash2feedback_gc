@@ -490,7 +490,7 @@ reports/phase2_injection/
 | base_complex_id | 原始 clean complex |
 | ligand_original | 原始配体 |
 | ligand_failed | 人工失败配体 |
-| true_failed_rgroup | 真实失败 R-group |
+| target_rgroup / injected_rgroup | 人工扰动的参考 R 基, 供 oracle 掩码使用 |
 | old_clash_pairs | 原始碰撞原子对 |
 | protein_clash_heatmap | 蛋白侧碰撞热区 |
 | clash_severity | 碰撞严重度 |

@@ -72,11 +72,13 @@ ClashRepairBench-RG-artificial
 target_rgroup = R2
 ```
 
-阶段 2 中它是人工真值标签：
+阶段 2 中它是人工扰动标签 / 参考修复区域标签：
 
 ```text
-true_failed_rgroup = R2
+target_rgroup = R2
 ```
+
+该字段可作为阶段 4 oracle 掩码来源, 但不应表述为无偏定位真值。
 
 但后续文档必须区分:
 
@@ -414,7 +416,7 @@ predicted_dominant_rgroup == target_rgroup
 正确做法：
 
 ```text
-target_rgroup 是人工真值；
+target_rgroup 是人工扰动标签 / 参考修复区域标签；
 predicted_dominant_rgroup 只记录，不用于主过滤；
 oracle_split 根据 ligand quality, target / non-target / scaffold clash 质量, target_score_ratio_valid 和 max_depth gates 决定。
 ```
@@ -926,7 +928,7 @@ python scripts/phase2_inject_artificial_clashes.py \
 ```text
 supported_single_rgroup 样本数量足够做 label provenance audit 和 phase4 mask seed；
 difficulty bins 有 easy / medium 分布；
-每个 supported case 有 target_rgroup 真值；
+每个 supported case 有 target_rgroup 人工扰动标签；
 每个 supported case 有 predicted_dominant_rgroup 记录；
 每个 supported case 有 top_valid_rgroups ranking；
 delta sensitivity 已保存。
