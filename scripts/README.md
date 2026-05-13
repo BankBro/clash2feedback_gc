@@ -79,3 +79,12 @@ python scripts/phase2_5_model_induced_audit.py \
 ```
 
 阶段 2.5 使用 `c2f_cpu` 作为主控环境. `phase2_5_prepare_diffsbdd.py` 负责准备外部 DiffSBDD 仓库, checkpoint 和独立 `diffsbdd` conda 环境, 并把环境, GPU, checkpoint hash 和 smoke test 写入 `external_setup.json`. wrapper 先做 training-overlap audit, 再选择 clean base pockets, 然后在 DiffSBDD 仓库, checkpoint 和 `diffsbdd` 环境可用时执行 frozen inference. 如果 DiffSBDD, checkpoint, official split, GPU 或生成数据缺失, 脚本只生成 blocked audit 和 schema-valid 空报告, 不训练, 不 repair, 不调参, 不做 baseline ranking.
+
+## 6. 阶段 3 命令
+
+```bash
+python scripts/phase3_label_provenance_audit.py \
+  --config configs/phase3_label_provenance_audit.yaml
+```
+
+`phase3_label_provenance_audit.py` 只读 phase2 benchmark, phase2 reports, processed base samples 和 phase2.5 reports, 生成 label provenance audit, circularity risk audit, construction consistency report 和 `phase4_mask_seed.csv`. 阶段 3 不训练模型, 不调用生成器, 不修复分子, 不把 phase2.5 model-induced rows 混入 construction consistency denominator.

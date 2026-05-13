@@ -1,0 +1,64 @@
+{
+  "schema_version": "phase3_label_provenance_audit_v0_1",
+  "generated_at": "2026-05-13",
+  "git": {
+    "status_short": "M README.md\n M configs/README.md\n M reports/README.md\n M scripts/README.md\n M src/README.md\n?? configs/phase3_label_provenance_audit.yaml\n?? \"docs/20260513-Clash2Feedback-GC_\\351\\230\\266\\346\\256\\2653\\346\\240\\207\\347\\255\\276\\346\\272\\257\\346\\272\\220\\345\\276\\252\\347\\216\\257\\351\\243\\216\\351\\231\\251\\345\\256\\241\\350\\256\\241\\344\\270\\216\\351\\230\\266\\346\\256\\2654\\346\\216\\251\\347\\240\\201\\347\\247\\215\\345\\255\\220\\347\\224\\237\\346\\210\\220\\346\\226\\271\\346\\241\\210\\346\\200\\273\\347\\272\\262.md\"\n?? reports/phase3_label_provenance_audit/\n?? scripts/phase3_label_provenance_audit.py\n?? src/clash2feedback/feedback/__init__.py\n?? src/clash2feedback/feedback/mask_seed.py\n?? tests/test_phase3_label_provenance.py\n?? tests/test_phase3_mask_seed.py\n?? tmp/20260513/",
+    "branch": "20260513-160230-phase3-implementation",
+    "head": "d1ad862f62b531e83ee8c866f4f13e54cab52015"
+  },
+  "inputs": {
+    "repo_root": ".",
+    "phase2_benchmark_root": "data/benchmarks/clashrepairbench_rg_artificial/v0_1",
+    "phase2_manifest": "data/benchmarks/clashrepairbench_rg_artificial/v0_1/manifest.parquet",
+    "phase2_report_root": "reports/phase2_injection",
+    "processed_root": "data/processed/v0_1",
+    "phase2_5_report_root": "reports/phase2_5_model_induced_audit",
+    "report_root": "reports/phase3_label_provenance_audit"
+  },
+  "seed": 20260513,
+  "phase3_scope": "label provenance audit + circularity risk audit + construction consistency check + phase4 mask seed generation",
+  "phase3_not_independent_locator_benchmark": true,
+  "phase3_does_not_train_generate_or_repair": true,
+  "phase2_manifest_rows": 2610,
+  "phase2_supported_report_rows": 357,
+  "phase2_summary_num_accepted_supported": 357,
+  "set_counts": {
+    "S0_all_valid_injection_attempts": 1185,
+    "S1_oracle_target_local_clash_set": 467,
+    "S2_phase2_supported_single_rgroup": 357
+  },
+  "construction_consistency": {
+    "denominator_set": "S2_phase2_supported_single_rgroup",
+    "denominator": 357,
+    "top1_predicted_equals_oracle": {
+      "numerator": 357,
+      "denominator": 357,
+      "value": 1.0
+    },
+    "top3_target_in_top_valid_rgroups": {
+      "numerator": 357,
+      "denominator": 357,
+      "value": 1.0
+    },
+    "interpretation": "construction consistency only, not independent localization accuracy"
+  },
+  "phase4_mask_seed": {
+    "rows": 357,
+    "backend_feasibility_candidates": 357,
+    "formal_loop_candidates": 357,
+    "predicted_equals_oracle": 357,
+    "random_equals_oracle": 0,
+    "random_equals_predicted": 0
+  },
+  "phase2_5_model_induced_audit": {
+    "failure_taxonomy_rows": 400,
+    "has_artificial_target_rgroup_column": false,
+    "included_in_construction_consistency_denominator": false
+  },
+  "mask_policy": {
+    "oracle_mask": "entire target_rgroup R-group atom set",
+    "predicted_mask": "entire predicted_dominant_valid_rgroup R-group atom set, operational policy only",
+    "random_mask": "same-ligand size-matched valid single-anchor R-group, deterministic seed",
+    "anchor_policy": "record only, not default free edit mask"
+  }
+}

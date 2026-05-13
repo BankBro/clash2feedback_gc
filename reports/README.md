@@ -94,3 +94,20 @@
 - `phase2_5_completion_audit.md`
 
 这些报告记录 frozen generation baseline 的 external validity audit. `external_setup.json` 记录 DiffSBDD 仓库 commit, checkpoint hash, `diffsbdd` 环境检查, GPU 和 smoke test. 若 DiffSBDD 仓库, checkpoint, official split, GPU 或生成数据缺失, 报告必须明确 blocked 原因, 且不得把 predicted dominant R-group 当 oracle ground truth.
+
+## 6. 阶段 3 报告
+
+`reports/phase3_label_provenance_audit/` 由阶段 3 CLI 生成:
+
+- `summary.json`
+- `phase2_label_provenance_audit.md`
+- `circularity_risk_audit.md`
+- `field_dependency_table.csv`
+- `set_definition_report.csv`
+- `construction_consistency_report.csv`
+- `locator_stress_report_s0.csv`
+- `locator_stress_report_s1.csv`
+- `phase4_mask_seed.csv`
+- `phase3_completion_audit.md`
+
+这些报告记录 label provenance, circularity risk, S0/S1/S2 集合定义, S2 construction consistency check 和阶段 4 mask seed. `phase4_mask_seed.csv` 只使用 phase2 `supported_single_rgroup` 作为阶段 4 主输入. 这些文件不是阶段 3 最终实验报告, 也不声明 independent locator benchmark.

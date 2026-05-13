@@ -1,0 +1,30 @@
+schema_version: "phase3_label_provenance_audit_v0_1"
+seed: 20260513
+
+inputs:
+  phase2_benchmark_root: "data/benchmarks/clashrepairbench_rg_artificial/v0_1"
+  phase2_manifest: "data/benchmarks/clashrepairbench_rg_artificial/v0_1/manifest.parquet"
+  phase2_report_root: "reports/phase2_injection"
+  processed_root: "data/processed/v0_1"
+  phase2_5_report_root: "reports/phase2_5_model_induced_audit"
+
+outputs:
+  report_root: "reports/phase3_label_provenance_audit"
+  conflict_report: "tmp/20260513/phase3-label-provenance-mask-seed-conflict-report.md"
+
+sets:
+  max_clash_depth_angstrom: 1.5
+
+random_mask:
+  policy: "size_matched_valid_single_anchor_rgroup"
+  exclude_oracle: true
+  exclude_predicted: true
+  size_metric: "heavy_atom_count"
+
+constraints:
+  do_not_mix_model_induced_into_construction_consistency: true
+  do_not_use_predicted_mask_as_ground_truth: true
+  phase3_does_not_train: true
+  phase3_does_not_generate: true
+  phase3_does_not_repair: true
+  phase4_primary_input_set: "S2_phase2_supported_single_rgroup"

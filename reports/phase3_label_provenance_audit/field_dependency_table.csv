@@ -1,0 +1,11 @@
+field_or_artifact,definition,implementation_source,phase3_interpretation
+target_rgroup,phase2 artificial perturbation target,scripts/phase2_inject_artificial_clashes.py::_common_row,"reference mask source, not unbiased locator truth"
+target_atom_indices,phase2 target R-group atom_indices,phase2 manifest plus processed base sample cross-check,oracle/reference edit mask atoms
+anchor_scaffold_atom_idx,phase2 target R-group anchor,phase2 manifest and processed base sample,"anchor record only, not default free edit mask"
+anchor_rgroup_atom_idx,phase2 target R-group anchor,phase2 manifest and processed base sample,anchor record only
+anchor_bond_idx,phase2 target R-group anchor bond,phase2 manifest and processed base sample,anchor record only
+predicted_dominant_valid_rgroup,attribution-derived dominant valid R-group,attribute_clashes_to_rgroups().dominant_valid_rgroup,"operational predicted mask policy, not acceptance gate and not ground truth"
+target_score_ratio_valid,target score divided by attribution valid R-group scores,perturb.labels.target_score_ratio_valid(),participates in supported_single_rgroup gate
+supported_single_rgroup,detector + attribution + target-dominance filtered split,perturb.labels.assign_oracle_split(),clean local repair substrate
+phase2_5_model_induced_samples,model-induced audit rows without artificial target_rgroup,reports/phase2_5_model_induced_audit/failure_taxonomy.csv,excluded from construction consistency denominator
+phase4_mask_seed.csv,S2 phase2 supported cases only,src/clash2feedback/feedback/mask_seed.py,phase4 backend feasibility and formal loop seed

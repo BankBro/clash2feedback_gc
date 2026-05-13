@@ -14,7 +14,7 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 
 阶段 2.5 方案详见 `docs/20260511-Clash2Feedback-GC_阶段2.5模型诱导失败外部有效性审计落地方案.md`. 阶段 2.5 是 model-induced failure external validity audit: 使用 frozen generation baseline 生成 candidates, 审计 all generated samples 的 ligand validity, protein-ligand clash, R-group attribution, failure taxonomy 和 repairability proxy. 阶段 2.5 不训练模型, 不做 repair, 不做 baseline ranking, 不回改 `phase2_v0_1`, 也不把 model-induced samples 混入阶段 3 construction consistency denominator.
 
-后续阶段 3 仍叫阶段 3, 但新口径是 label provenance audit, circularity risk audit, construction consistency check 和 phase4 mask seed generation. `supported_single_rgroup` 上的 Top-1 / Top-3 只能作为 construction consistency check, 不能作为 independent localization benchmark.
+阶段 3 仍叫阶段 3, 新口径是 label provenance audit, circularity risk audit, construction consistency check 和 phase4 mask seed generation. `supported_single_rgroup` 上的 Top-1 / Top-3 只能作为 construction consistency check, 不能作为 independent localization benchmark. 阶段 3 不训练模型, 不调用生成器, 不修复分子.
 
 后续阶段 4 将先做 backend feasibility audit, 再做 Random / Predicted / Oracle formal repair loop. 阶段 4 的 predicted mask 是 operational mask policy, 不是 ground truth; DiffDec / DiffSBDD plain backend 只能视为 local constrained resampling, 只有实现 clash penalty / hot region guidance 并改采样过程后, 才能声称 `H_clash` 进入生成过程.
 
@@ -254,6 +254,30 @@ conda run -n c2f_cpu python scripts/phase2_5_model_induced_audit.py \
 
 若 DiffSBDD 仓库, checkpoint, official split, GPU 或生成数据缺失, 脚本会生成 schema-valid 报告并把原因写入 blocked, 不伪造 generation / taxonomy 结果.
 
-## 9. 协作说明
+## 9. 阶段 3 用法
+
+运行标签溯源, 循环风险审计, construction consistency check 和阶段 4 mask seed 生成:
+
+```bash
+conda run -n c2f_cpu python scripts/phase3_label_provenance_audit.py \
+  --config configs/phase3_label_provenance_audit.yaml
+```
+
+主要输出:
+
+- `reports/phase3_label_provenance_audit/summary.json`
+- `reports/phase3_label_provenance_audit/phase2_label_provenance_audit.md`
+- `reports/phase3_label_provenance_audit/circularity_risk_audit.md`
+- `reports/phase3_label_provenance_audit/field_dependency_table.csv`
+- `reports/phase3_label_provenance_audit/set_definition_report.csv`
+- `reports/phase3_label_provenance_audit/construction_consistency_report.csv`
+- `reports/phase3_label_provenance_audit/locator_stress_report_s0.csv`
+- `reports/phase3_label_provenance_audit/locator_stress_report_s1.csv`
+- `reports/phase3_label_provenance_audit/phase4_mask_seed.csv`
+- `reports/phase3_label_provenance_audit/phase3_completion_audit.md`
+
+`phase4_mask_seed.csv` 仅以 phase2 `supported_single_rgroup` 作为阶段 4 主输入. 参考掩码来自 `target_rgroup` 对应整个 R 基, predicted mask 来自 `predicted_dominant_valid_rgroup` 对应整个 R 基, random mask 是同一配体中 size-matched 的合法 single-anchor R 基. Anchor 单独记录, 不默认加入自由编辑掩码. 阶段 2.5 model-induced rows 不进入 construction consistency denominator.
+
+## 10. 协作说明
 
 修改仓库前先阅读根目录 `AGENTS.md`. 修改主目录内文件时, 同步阅读该目录下的 `AGENTS.md`.

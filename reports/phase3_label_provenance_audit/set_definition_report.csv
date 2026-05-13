@@ -1,0 +1,4 @@
+set_name,count,definition,phase4_role,construction_consistency_denominator
+S0_all_valid_injection_attempts,1185,"ligand_valid true, ligand_internal_severe_clash_count 0, oracle_split not in unsupported/invalid_conformer/duplicate_removed",auxiliary_audit_only,False
+S1_oracle_target_local_clash_set,467,"valid ligand, target severe clash >=1, scaffold and non-target severe clash 0, max_clash_depth <= 1.5, without target_score_ratio_valid gate",auxiliary_stress_analysis_only,False
+S2_phase2_supported_single_rgroup,357,oracle_split == supported_single_rgroup,primary_phase4_mask_seed_input,True
