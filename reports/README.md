@@ -108,6 +108,7 @@
 - `locator_stress_report_s0.csv`
 - `locator_stress_report_s1.csv`
 - `phase4_mask_seed.csv`
+- `random_mask_balance_summary.csv`
 - `phase3_completion_audit.md`
 
-这些报告记录 label provenance, circularity risk, S0/S1/S2 集合定义, S2 construction consistency check 和阶段 4 mask seed. `phase4_mask_seed.csv` 只使用 phase2 `supported_single_rgroup` 作为阶段 4 主输入. 这些文件不是阶段 3 最终实验报告, 也不声明 independent locator benchmark.
+这些报告记录 label provenance, circularity risk, S0/S1/S2 集合定义, S2 construction consistency check 和阶段 4 mask seed. `phase4_mask_seed.csv` 只使用 phase2 `supported_single_rgroup` 作为阶段 4 主输入. `random_mask_balance_summary.csv` 是收尾核查派生统计, 仅用于记录 random mask 与 oracle/predicted mask 的大小差异, 不回写阶段 3 核心结果. 这些文件不是阶段 3 最终实验报告, 也不声明 independent locator benchmark.
