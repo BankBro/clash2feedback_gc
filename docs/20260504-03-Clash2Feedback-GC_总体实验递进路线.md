@@ -109,17 +109,24 @@ Binding Success Rate
 | 阶段 7 | 学习型反馈适配器 | 学习把修复协议转成生成器可执行控制 | 是 | 是 | learned adapter | `runs/phase7_adapter/`、`reports/phase7_adapter/` |
 | 阶段 8 | 模型诱导失败集测试 | 验证方法不只适用于人工注入失败 | 是 | 是 | model-induced repair results | `data/benchmarks/model_induced/v0_1/`、`reports/phase8_model_induced/` |
 
-第一篇建议至少完成：
+长期第一篇完整版本可争取完成：
 
 \[
 \boxed{
-\text{阶段 0--5 必须完成}
+\text{阶段 0--5}
 +
-\text{阶段 6--7 作为主方法增强}
+\text{阶段 6--7 作为增强}
 +
-\text{阶段 8 做小规模验证}
+\text{阶段 8 小规模验证}
 }
 \]
+
+当前短期执行优先级仍是：
+
+1. 阶段 3: label provenance audit + circularity risk audit + phase4 mask seed generation.
+2. 阶段 4.0: backend feasibility audit.
+3. 阶段 4.1: Random / Predicted / Oracle formal repair loop.
+4. 阶段 5/6/7: 只有在阶段 4.1 得到稳定 repair outcomes 后, 再推进 ranker, learned critic 和 learned adapter.
 
 ---
 
