@@ -3,7 +3,7 @@
 > 日期：2026-05-10  
 > 建议仓库路径：`docs/20260510-Clash2Feedback-GC_阶段2人工局部碰撞注入最终落地方案.md`  
 > 关联阶段：阶段 0 processed clean complexes、阶段 1 clash detector / attribution / verifier  
-> 目标：构建 `ClashRepairBench-RG-artificial`，即带真实 target R-group 标签的 controlled synthetic failed pose benchmark。  
+> 目标：构建 `ClashRepairBench-RG-artificial`，即带人工 target R-group 标签的 controlled synthetic failed pose benchmark 和 clean local repair substrate。
 > 重要边界：阶段 2 不训练模型、不调用生成器、不做 repair、不做 whole protein-ligand complex minimization。
 
 ---
@@ -76,6 +76,13 @@ target_rgroup = R2
 
 ```text
 true_failed_rgroup = R2
+```
+
+但后续文档必须区分:
+
+```text
+target_rgroup = 人工扰动标签
+supported_single_rgroup = 经过 detector / attribution / target-dominance gates 过滤后的 clean local repair substrate
 ```
 
 ### 2.2 non-target R-groups
@@ -348,6 +355,8 @@ non_target_severe_pair_count = 0
 max_clash_depth 不极端，第一版建议 <= 1.5 Å
 ```
 
+这里的 `target_score_ratio_valid` 来自 `attribute_clashes_to_rgroups()` 产生的 `valid_rgroup_scores`, 不是独立人工标签. 因此 `supported_single_rgroup` 是 attribution-aware filtered clean local repair subset, 后续不应用作 independent locator benchmark.
+
 ### 8.2 near-miss 不进入主集
 
 如果只是接近 protein，但未达到 severe：
@@ -362,7 +371,7 @@ target_num_severe_pairs = 0
 near_miss_contact
 ```
 
-不进入阶段 3 主 Top-1 / Top-3 评估。
+不进入阶段 3 construction consistency check 分母。
 
 ---
 
@@ -374,7 +383,7 @@ near_miss_contact
 
 | split | 含义 | 阶段 3 用途 |
 |---|---|---|
-| `supported_single_rgroup` | target R-group 单区域主导，主评估集 | Top-1 / Top-3 主指标 |
+| `supported_single_rgroup` | target R-group 单区域主导, clean local repair substrate | label provenance audit, construction consistency check, phase4 mask seed |
 | `ambiguous_region` | target 有 clash，但区域不够单一 | reject / hard split |
 | `multi_region` | 多个 R-groups 同时 severe | reject |
 | `scaffold_clash` | scaffold 也发生 severe clash | reject |
@@ -407,8 +416,10 @@ predicted_dominant_rgroup == target_rgroup
 ```text
 target_rgroup 是人工真值；
 predicted_dominant_rgroup 只记录，不用于主过滤；
-oracle_split 根据 target / non-target / scaffold clash 质量决定。
+oracle_split 根据 ligand quality, target / non-target / scaffold clash 质量, target_score_ratio_valid 和 max_depth gates 决定。
 ```
+
+需要注意: `target_score_ratio_valid` 是 attribution-derived gate. 它不等同于 `predicted_dominant_rgroup == target_rgroup`, 但会使 supported 主集带有 attribution 选择偏差. 因此阶段 3 必须把 Top-1 / Top-3 降级为 construction consistency check, 并报告 circularity risk.
 
 ### 10.2 派生样本继承 base split
 
@@ -668,7 +679,7 @@ unsupported_reason
 
 ### 15.3 `supported_single_rgroup_cases.csv`
 
-阶段 3 主评估集来源。
+阶段 3 label provenance audit, construction consistency check 和 phase4 mask seed 的主要输入。
 
 ### 15.4 `invalid_conformer_cases.csv`
 
@@ -913,12 +924,20 @@ python scripts/phase2_inject_artificial_clashes.py \
 进入阶段 3 前，至少满足：
 
 ```text
-supported_single_rgroup 样本数量足够跑 mini-loop；
+supported_single_rgroup 样本数量足够做 label provenance audit 和 phase4 mask seed；
 difficulty bins 有 easy / medium 分布；
 每个 supported case 有 target_rgroup 真值；
 每个 supported case 有 predicted_dominant_rgroup 记录；
 每个 supported case 有 top_valid_rgroups ranking；
 delta sensitivity 已保存。
+```
+
+阶段 3 后续使用边界:
+
+```text
+阶段 3 使用 phase2 结果做 label provenance audit, circularity risk audit, construction consistency check 和 phase4 mask seed generation.
+supported_single_rgroup 上的 Top-1 / Top-3 不作为 independent localization benchmark.
+阶段 4 使用 supported_single_rgroup 作为 clean local repair substrate.
 ```
 
 ---
@@ -1007,8 +1026,8 @@ reports/phase2_injection/phase2_completion_audit.md
 
 阶段 2 最终版冻结为：
 
-> 从 phase0/phase1 clean base pose 出发，选择合法 single-anchor target R-group，通过 easy rotation / torsion perturb / directed clash 构造 protein-ligand severe clash；用 RDKit 和几何规则过滤 ligand 自身不合理构象；用阶段 1 detector / attribution 标注 target、non-target、scaffold clash；严格防止数据泄漏、标签泄漏、atom index 错位和重复样本灌水；最终产出 supported / reject / invalid / unsupported 分层 benchmark。
+> 从 phase0/phase1 clean base pose 出发，选择合法 single-anchor target R-group，通过 easy rotation / torsion perturb / directed clash 构造 protein-ligand severe clash；用 RDKit 和几何规则过滤 ligand 自身不合理构象；用阶段 1 detector / attribution 标注 target、non-target、scaffold clash, 并用 `target_score_ratio_valid` 等 gates 形成 attribution-aware clean local repair substrate；严格防止数据泄漏、标签泄漏、atom index 错位和重复样本灌水；最终产出 supported / reject / invalid / unsupported 分层 benchmark。
 
 一句话：
 
-> **阶段 2 是造一个标签干净、结构受控、配体自身合理、失败来源明确的 artificial R-group clash benchmark，不是生成模型，不是修复，也不是稳定结合构象证明。**
+> **阶段 2 是造一个人工 target 标签明确、结构受控、配体自身合理、适合局部修复的 artificial R-group clash substrate, 不是 independent locator benchmark, 不是生成模型, 不是修复, 也不是稳定结合构象证明。**

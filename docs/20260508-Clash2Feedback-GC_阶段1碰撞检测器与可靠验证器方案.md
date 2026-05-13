@@ -966,7 +966,7 @@ new_severe_pair_created_count
 
 ### 11.3 阶段 1 不以 Top-1 / Top-3 为验收
 
-R-group Top-1 / Top-3 需要人工失败样本，因此应作为阶段 3 规则 locator 的验收标准，而不是阶段 1 自身验收标准。
+R-group Top-1 / Top-3 需要人工失败样本, 因此不是阶段 1 自身验收标准. 在当前新口径下, 这些指标在 phase2 `supported_single_rgroup` 上也只能作为阶段 3 construction consistency check, 不能作为 independent locator benchmark.
 
 阶段 1 只负责提供：
 
@@ -977,12 +977,13 @@ failure_type
 verifier skeleton
 ```
 
-阶段 2 生成人工失败样本后，阶段 3 再评估：
+阶段 2 生成人工失败样本后, 阶段 3 改为：
 
 ```text
-R-group Top-1 > 70%
-R-group Top-3 > 90%
-dominant ratio 平均值 > 0.75
+label provenance audit
+circularity risk audit
+construction consistency check
+phase4 mask seed generation
 ```
 
 ---
@@ -1002,7 +1003,7 @@ dominant_ratio 是否 > 0.7；
 
 ### 12.2 给阶段 3 的接口
 
-阶段 3 rule locator 直接使用：
+阶段 3 使用阶段 1 attribution 输出做 label provenance audit, circularity risk audit 和 phase4 mask seed generation：
 
 ```text
 rgroup_score
@@ -1016,12 +1017,14 @@ failure_type
 阶段 4 generator repair 需要使用：
 
 ```text
-edit_region = dominant_rgroup
+edit_region = predicted operational mask 或 oracle / random mask
 keep_region = scaffold + non-dominant R-groups
 old_clash_pairs
 protein_clash_heatmap
 repair_verifier
 ```
+
+阶段 4 的 predicted mask 是 operational mask policy, 不是 ground truth. `protein_clash_heatmap` 在 plain backend 下只能作为 verifier / selector / adapter 输入; 只有实现 clash penalty / hot region guidance 并改采样过程后, 才能声称它进入生成过程.
 
 ### 12.4 给阶段 2.5 的接口
 
@@ -1045,7 +1048,8 @@ repair_verifier
 8. 人工 rotation injection 构造的是 controlled synthetic failed pose，不应表述为真实稳定结合构象。
 9. 阶段 2 调用阶段 1 detector / attribution 的用途是判断人工扰动后是否产生 protein-ligand severe clash, 记录 target / non-target / scaffold clash scores, 并记录 predicted dominant region; predicted dominant == target 不能作为唯一保留条件。
 10. 阶段 2 不做 whole protein-ligand complex minimization。RDKit MMFF / UFF 可作为 ligand-only energy delta filter, 用于排除 ligand 自身极端不合理构象, 但不用于消除人工注入的 protein-ligand clash。
-11. 阶段 2 可准备 verifier preflight: no-repair negative 应 fail, oracle repair synthetic failed -> original clean 应 pass, wrong-region repair 应 fail; 这不等同于阶段 4 真实 repair candidate 验证。
+11. 阶段 3 不再承担 independent locator benchmark; `supported_single_rgroup` 上的 Top-1 / Top-3 只作为 construction consistency check。
+12. 阶段 2 可准备 verifier preflight: no-repair negative 应 fail, oracle repair synthetic failed -> original clean 应 pass, wrong-region repair 应 fail; 这不等同于阶段 4 真实 repair candidate 验证。
 
 ---
 

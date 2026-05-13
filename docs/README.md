@@ -13,3 +13,9 @@
 ## 3. 事实优先级
 
 仓库真实结果文件优先于 `docs/` 中的方案描述. 写作时不得把未验证设想写成已完成结论, 不得臆造实验数据.
+
+## 4. 阶段 3 / 4 当前口径
+
+- 阶段 3 仍叫阶段 3, 定位为 label provenance audit, circularity risk audit, construction consistency check 和 phase4 mask seed generation.
+- `supported_single_rgroup` 上的 Top-1 / Top-3 只能作为 construction consistency check, 不作为 independent locator benchmark.
+- 阶段 4 的 predicted mask 是 operational mask policy, 不是 ground truth; 阶段 4 先做 backend feasibility audit, 再做 Random / Predicted / Oracle formal repair loop.

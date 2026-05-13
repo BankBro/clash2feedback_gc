@@ -74,7 +74,39 @@ The wrapper clones or checks `external/DiffSBDD/`, pins the commit, checks the c
 reports/phase2_5_model_induced_audit/external_setup.json
 ```
 
-## 3. 维护规则
+## 3. Candidate Local Repair Backends
+
+### 3.1 DiffSBDD
+
+```text
+status: verified_for_phase2_5_frozen_de_novo_audit
+role:
+  - de novo audit baseline
+  - full resampling baseline candidate
+  - candidate inpainting backend to be evaluated in phase4_0
+limitation:
+  - 原生 DiffSBDD 不直接接收完整 Clash2Feedback feedback.
+  - H_clash / old-clash-resolved / no-new-clash 主要由 verifier / selector 使用.
+  - 若要在生成过程中避开 old clash heatmap, 需要 guided sampling patch.
+```
+
+### 3.2 DiffDec
+
+```text
+status: to_be_verified_locally
+role:
+  - scaffold decoration / R-group generation candidate backend
+  - 阶段 4.0 backend feasibility audit 第一优先核查对象之一
+limitation:
+  - 原版 DiffDec 应按 anchor-aware R-group resampling / local constrained generation 评估.
+  - 不保证避开旧 clash.
+  - 不原生接收 H_clash / severity / no-new-clash 约束.
+  - 在未修改 sampling / denoising loop 前, 不得写成完整 feedback-guided denoising.
+```
+
+阶段 4 文档中, DiffSBDD / DiffDec plain backend 统一表述为 `local constrained resampling` 或 candidate backend. 只有实现 clash penalty / hot region guidance 并改采样过程后, 才能声称 `H_clash` 进入生成过程.
+
+## 4. 维护规则
 
 - 新增外部 baseline 时, 在本文档增加 source repo, pinned commit, local path, checkpoint provenance 和关键代码路径。
 - 外部源码, checkpoint 和生成缓存保留在 `external/` 或 `runs/`, 默认不提交 Git。

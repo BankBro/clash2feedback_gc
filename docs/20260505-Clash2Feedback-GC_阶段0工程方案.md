@@ -38,7 +38,7 @@
 |---|---|
 | 阶段 1 碰撞检测器 | protein atoms、ligand atoms、pocket atoms、原子坐标 |
 | 阶段 2 人工局部碰撞注入 | scaffold、R-groups、anchors |
-| 阶段 3 规则定位 | R-group masks、pocket、基础合法性检查 |
+| 阶段 3 标签溯源与 mask seed | R-group masks、pocket、基础合法性检查 |
 | 阶段 4 局部修复闭环 | editable mask、fixed mask、anchor 信息 |
 
 ### 1.1 protein、target 和 pocket 的术语口径
@@ -245,15 +245,17 @@ clash2feedback_gc/
     phase0/
     phase1_clash_detector/
     phase2_injection/
-    phase3_rule_locator/
-    phase4_rule_repair/
+    phase3_label_provenance_audit/
+    phase4_0_backend_feasibility/
+    phase4_local_repair_loop/
     phase5_ranker/
     phase6_critic/
     phase7_adapter/
     phase8_model_induced/
 
   runs/
-    phase4_rule_repair/
+    phase4_0_backend_feasibility/
+    phase4_local_repair_loop/
     phase5_ranker/
     phase6_critic/
     phase7_adapter/
@@ -280,8 +282,9 @@ clash2feedback_gc/
     phase0_make_splits.py
     phase1_check_clashes.py
     phase2_inject_artificial_clashes.py
-    phase3_rule_locator.py
-    phase4_rule_repair.py
+    phase3_label_provenance_audit.py
+    phase4_backend_feasibility.py
+    phase4_local_repair_loop.py
     phase5_build_candidate_pool.py
     phase5_train_ranker.py
     phase6_train_critic.py

@@ -56,7 +56,7 @@ Binding Success Rate
 第一篇做：
 
 1. 构建取代基级局部碰撞修复数据；
-2. 训练或评估失败区域定位器；
+2. 审计人工失败数据的标签来源和 attribution-derived mask policy；
 3. 定义结构化修复协议；
 4. 把协议翻译成冻结生成器可执行控制；
 5. 生成局部修复候选；
@@ -92,10 +92,10 @@ BIBM 版最小实验包:
 | 模块 | 最低要求 |
 |---|---|
 | benchmark | injected split + small natural / model-induced split |
-| locator | rule locator / Clash2Mask |
+| mask policy | phase2 label provenance audit + attribution-derived predicted mask policy |
 | repair | local torsion / conformer repair, R-group resampling 可作为增强 |
 | verifier | old clash resolved + no new clash + scaffold / non-edit RMSD |
-| baselines | hard filter, resampling, full-ligand repair, random mask, reference mask |
+| baselines | hard filter, full resampling, random mask, predicted mask, oracle mask |
 | main metric | Reliable Repair Yield |
 
 主趋势应围绕可靠修复率, scaffold 保持, 非编辑区保持, no-new-clash rate 和 cost per success 展开. Docking score 不作为主指标.
@@ -104,87 +104,42 @@ BIBM 版最小实验包:
 
 ## 2. 第一篇核心实验问题
 
-### 问题一：纠错器能不能找对失败区域？
+### RQ1：Phase2 supported set 的标签依赖和循环验证风险是什么？
 
-输入：
+阶段 2 的 `target_rgroup` 是人工扰动标签, 但 `supported_single_rgroup` 是经过 detector / attribution / target-dominance gates 过滤后的 clean local repair substrate. 因此第一篇不能把 supported 主集上的 Top-1 / Top-3 写成无偏 locator accuracy, 必须先回答 label provenance 和 circularity risk.
 
-\[
-(P,L_f)
-\]
+### RQ2：Predicted mask policy 是否有 downstream repair utility？
 
-输出：
+阶段 4 的 predicted mask 来自现有 `detect_clashes()` + `attribute_clashes_to_rgroups()` 和 `dominant_valid_rgroup` / `top_valid_rgroups`. 它是 operational mask policy, 不是 ground truth.
 
-\[
-M_t
-\]
-
-其中：
-
-| 符号 | 含义 |
-|---|---|
-| \(P\) | 蛋白质口袋 |
-| \(L_f\) | 局部碰撞失败候选配体 |
-| \(M_t\) | 预测失败区域，通常是某个 R-group |
-
-要回答：
-
-> 模型能不能定位哪个局部取代基导致了 protein-ligand clash？
-
-### 问题二：结构化反馈是否比单纯 mask 更有用？
-
-比较：
+核心比较是:
 
 ```text
-只告诉生成器：改哪里
+Random mask + same backend + same candidate budget
+Predicted mask + same backend + same candidate budget
+Oracle mask + same backend + same candidate budget
 ```
 
-和：
+要回答:
+
+> Predicted mask repair 是否比 size-matched Random mask repair 更容易产生 reliable repaired candidates?
+
+### RQ3：Local repair 是否比 full resampling 更能保持局部性？
+
+比较局部受约束修复和 full-ligand resampling:
 
 ```text
-告诉生成器：改哪里、保留哪里、旧碰撞热区在哪里、撞得多严重、该小修还是大修
+old clash resolved
+no new severe clash
+scaffold RMSD
+non-mask RMSD
+anchor consistency
+fixed-region preservation
 ```
 
-也就是比较：
+### RQ4：若实现 guided sampling, clash heatmap 是否能提高候选生成效率？
 
-\[
-\text{Clash2Mask}
-\quad vs \quad
-\text{Clash2Feedback-GC}
-\]
-
-### 问题三：学习型反馈适配器是否优于固定规则？
-
-比较：
-
-\[
-A_{rule}(\mathcal P_t^{repair})
-\]
-
-和：
-
-\[
-A_\psi(\mathcal P_t^{repair})
-\]
-
-看学习型适配器是否能更好地选择：
-
-\[
-u_t=(\mathcal M_t^{edit},\mathcal M_t^{fix},\rho_t,\tau_t,K_t)
-\]
-
-### 问题四：排序器是否能减少抽卡？
-
-生成器一次产生 \(K\) 个候选，排序器预测哪个最像可靠修复：
-
-\[
-C_\phi^{rank}(P,L_f,L_r,\mathcal B_t)
-\rightarrow
-\hat U
-\]
-
-要回答：
-
-> 在相同候选预算下，排序器能不能把真正修好的候选排到前面？
+RQ4 只有在实现 clash penalty / hot region guidance 并改采样过程后, 才能作为主实验. 在 plain DiffDec / DiffSBDD backend 下, `H_clash` 只能进入 verifier / selector / adapter 输入, 不能声称直接指导 diffusion denoising.
 
 ---
 
@@ -238,11 +193,11 @@ R
 | 数据 | 统一保存位置 | 用途 |
 |---|---|---|
 | clean complexes | `data/processed/v0_1/` | 从原始复合物筛出的干净基础样本 |
-| 人工注入局部碰撞样本 | `data/benchmarks/clashrepairbench_rg_artificial/v0_1/` | 训练和评估失败区域定位，标签清楚 |
+| 人工注入局部碰撞样本 | `data/benchmarks/clashrepairbench_rg_artificial/v0_1/` | controlled local repair substrate, 用于标签溯源、mask seed 和局部修复评估 |
 | 生成器诱导失败样本 | `data/benchmarks/model_induced/v0_1/` | 验证真实生成失败场景下能否修复 |
 | 修复候选池 | `data/candidate_pools/v0_1/` | 训练排序器和反馈适配器 |
 
-模型诱导失败相关实验拆成两层: 阶段 2.5 是 model-induced failure audit, 只做 all generated samples taxonomy 和 phase2 coverage proxy; 阶段 8 才做 model-induced repair evaluation 和 repair outcome. BIBM 版中, 阶段 2.5 可作为 external validity evidence, 说明 artificial single-Rgroup clash benchmark 不是凭空构造, 而是在 frozen SBDD baseline 的 generated failures 中存在对应子分布. 但阶段 2.5 不应被表述为 repair success evidence.
+模型诱导失败相关实验拆成两层: 阶段 2.5 是 model-induced failure audit, 只做 all generated samples taxonomy 和 phase2 coverage proxy; 阶段 8 才做 model-induced repair evaluation 和 repair outcome. 当前阶段 2.5 最终报告显示, frozen DiffSBDD de novo complete-ligand audit 中 `single_rgroup_clash` 很少, 仅 `1 / 200` unique candidates. 因此 BIBM 版应把阶段 2 artificial `supported_single_rgroup` 表述为 controlled local-repair testbed, 不能声称真实 de novo failures 主要是 R-group clash, 也不能把阶段 2.5 写成 repair success evidence.
 
 ---
 
@@ -340,7 +295,7 @@ L=S+\mathcal R
 
 ## 8. 人工局部碰撞注入
 
-人工注入失败样本用于训练和评估诊断器，因为真实失败区域已知。
+人工注入失败样本用于构建 controlled local repair substrate. `target_rgroup` 是人工扰动标签, 但 `supported_single_rgroup` 会经过 detector / attribution / target-dominance gates 过滤, 因而不能直接当作 independent locator benchmark。
 
 ### 方式一：围绕 anchor bond 旋转
 
@@ -442,6 +397,13 @@ L=S+\mathcal R
 | R-group 重原子数 | 2–15 |
 
 人工失败集不只保存 supported / hard split, 还应保存 `invalid_conformer`, `near_miss_contact`, `duplicate_removed` 和 `unsupported`, 这些不进入主评估集, 但必须统计原因。阶段 2 benchmark construction 不得使用 predicted dominant R-group 是否等于 target R-group 作为唯一保留条件, 所有 injected variants 必须继承 base complex split。
+
+阶段 2 标签使用边界:
+
+- `target_rgroup` 是人工选择并扰动的 R-group.
+- `supported_single_rgroup` 是经过 ligand quality, detector, attribution, `target_score_ratio_valid`, non-target / scaffold no-severe 和 max-depth gates 后的 clean local repair subset.
+- `target_score_ratio_valid` 来自 attribution-derived valid R-group scores.
+- supported 主集上的 Top-1 / Top-3 只能作为 construction consistency check, 不能作为论文主贡献的 independent localization benchmark.
 
 ---
 
@@ -658,6 +620,8 @@ u^*=\arg\max_{u\in\mathcal U}\bar U(u)
 
 > 第一版使用 DiffSBDD 作为冻结生成器基座；Clash2Feedback-GC 的诊断协议和验证器尽量与生成器解耦，具体生成器通过反馈适配器接收 fixed atoms、editable mask、anchor、repair strength 等控制。
 
+DiffDec / DiffSBDD plain backend 在未改 sampling / denoising loop 时, 只能表述为 local constrained resampling 或 candidate inpainting backend. `H_clash`, old-clash-resolved 和 no-new-clash 主要由 verifier / selector / adapter 使用. 只有实现 clash penalty / hot region guidance 并修改采样过程后, 才能声称 `H_clash` 进入生成过程。
+
 ---
 
 ## 15. 可靠验证器
@@ -698,22 +662,22 @@ Reliable Repair = old clash resolved + no new clash + geometry valid + keep regi
 |---|---|---|
 | Drop | 失败候选直接丢弃 | 说明传统流程浪费候选 |
 | Full resampling | 同一 pocket 重新生成完整分子 | 比较完全重来和局部修复 |
-| Random mask | 随机选一个 R-group 重画 | 证明定位有用 |
-| Clash2Mask-rule | 规则定位失败 R-group，只给 mask | 证明不只是 mask |
-| Clash2Feedback-rule | 规则定位 + keep + severity + rule adapter | 证明结构化协议有用 |
+| Random mask | size-matched 随机选 R-group 重画 | mask policy 下游价值的负对照 |
+| Predicted mask | attribution-derived operational mask policy | 评估 predicted mask 是否优于 random |
+| Structured predicted protocol | predicted mask + keep / anchor / severity / rule adapter | 评估结构化控制是否带来额外收益 |
 | Learned critic + rule adapter | 学习型纠错器 + 规则适配器 | 证明纠错器有用 |
 | Learned critic + learned adapter | 学习型纠错器 + 学习型适配器 | 证明适配器可学习 |
 | Full method + ranker | 完整方法 | 主方法 |
-| Oracle feedback | 真实失败区域 + 最优控制 | 上限 |
+| Oracle mask / protocol | 人工 `target_rgroup` 对应区域 + 最优控制 | 上限, 不是 predicted mask 的 ground truth 替代物 |
 
 期望趋势：
 
 \[
 \text{Random mask}
 <
-\text{Clash2Mask}
+\text{Predicted mask}
 <
-\text{Clash2Feedback-rule}
+\text{Structured predicted protocol}
 <
 \text{Learned critic + adapter}
 <
@@ -755,8 +719,9 @@ Reliable Repair = old clash resolved + no new clash + geometry valid + keep regi
 
 | 指标 | 含义 |
 |---|---|
-| R-group Top-1 Accuracy | 预测失败 R-group 是否正确 |
-| R-group Top-3 Accuracy | 真实失败 R-group 是否在前三 |
+| R-group Top-1 / Top-3 construction consistency | 仅在 phase2 supported 主集上检查 attribution 与构造标签的一致性, 不作为 independent locator accuracy |
+| Predicted mask coverage | operational mask policy 可输出 repair mask 的比例 |
+| Circularity risk level | 评估集 gate 与 attribution policy 共享依赖的风险 |
 | Atom-level F1 | 失败原子级定位质量 |
 | Heatmap AUPRC | 蛋白碰撞热区预测质量 |
 | Severity MAE | 严重度预测误差 |
@@ -797,12 +762,12 @@ Reliable Repair = old clash resolved + no new clash + geometry valid + keep regi
 | Test-artificial |  |  |  |  |  |
 | Test-model-induced |  |  |  |  |  |
 
-### 表 2：失败区域定位
+### 表 2：标签溯源与 mask policy consistency
 
-| 方法 | R-group Top-1 | R-group Top-3 | Atom F1 | Heatmap AUPRC | Severity MAE |
+| 方法 / 审计项 | Top-1 consistency | Top-3 consistency | Circularity risk | Mask seed coverage | 备注 |
 |---|---:|---:|---:|---:|---:|
-| Rule locator |  |  |  |  |  |
-| Learned critic |  |  |  |  |  |
+| Rule attribution policy |  |  |  |  | construction consistency only |
+| Learned critic |  |  |  |  | 若实现, 需另设无泄漏评估 |
 
 ### 表 3：人工失败集修复
 
@@ -810,8 +775,8 @@ Reliable Repair = old clash resolved + no new clash + geometry valid + keep regi
 |---|---:|---:|---:|---:|---:|
 | Full resampling |  |  |  |  |  |
 | Random mask |  |  |  |  |  |
-| Clash2Mask-rule |  |  |  |  |  |
-| Clash2Feedback-rule |  |  |  |  |  |
+| Predicted mask |  |  |  |  |  |
+| Structured predicted protocol |  |  |  |  |  |
 | Learned critic + rule adapter |  |  |  |  |  |
 | Learned critic + learned adapter |  |  |  |  |  |
 | Full method + ranker |  |  |  |  |  |
@@ -823,8 +788,8 @@ Reliable Repair = old clash resolved + no new clash + geometry valid + keep regi
 |---|---:|---:|---:|---:|---:|
 | Full resampling |  |  |  |  |  |
 | Random mask |  |  |  |  |  |
-| Clash2Mask-rule |  |  |  |  |  |
-| Clash2Feedback-rule |  |  |  |  |  |
+| Predicted mask |  |  |  |  |  |
+| Structured predicted protocol |  |  |  |  |  |
 | Full method |  |  |  |  |  |
 
 ---
@@ -874,7 +839,7 @@ s_t \uparrow
 | 去掉 keep | 非失败区域漂移增加 |
 | 低 \(\tau_t\) | 修改幅度小 |
 | 高 \(\tau_t\) | 修改幅度大 |
-| 去掉 heatmap | 旧碰撞残留或邻近新碰撞增加 |
+| 去掉 heatmap | 只有在实现 clash-guided sampling 后才作为生成过程消融; plain backend 下只能作为 verifier / selector / adapter 消融 |
 
 ---
 
@@ -884,8 +849,8 @@ s_t \uparrow
 |---|---|---|---|
 | Step 1：准备 clean complexes | raw complexes | \((P,L,S,\mathcal R,anchors,pocket)\) | `data/processed/v0_1/` |
 | Step 2：人工注入失败 | clean complexes | \((P,L_f,M^*,E^{old},H^{clash},s)\) | `data/benchmarks/clashrepairbench_rg_artificial/v0_1/` |
-| Step 3：训练或评估诊断头 | artificial samples | \((\hat M,\hat H,\hat s)\) | `reports/phase6_critic/` 和 `runs/phase6_critic/` |
-| Step 4：规则适配器生成候选 | failed samples | repair candidates | `runs/phase4_rule_repair/` |
+| Step 3：标签溯源与 mask seed | artificial samples | provenance audit, circularity risk, phase4 masks | `reports/phase3_label_provenance_audit/` |
+| Step 4：backend feasibility + formal repair loop | failed samples | repair candidates | `runs/phase4_0_backend_feasibility/`, `runs/phase4_local_repair_loop/` |
 | Step 5：验证器打标签 | repair candidates | labels / utilities | `data/candidate_pools/v0_1/` |
 | Step 6：训练排序器 | candidate pools | ranker | `runs/phase5_ranker/` |
 | Step 7：训练适配器 | candidate pools | adapter | `runs/phase7_adapter/` |
@@ -957,15 +922,17 @@ clash2feedback_gc/
     phase0/
     phase1_clash_detector/
     phase2_injection/
-    phase3_rule_locator/
-    phase4_rule_repair/
+    phase3_label_provenance_audit/
+    phase4_0_backend_feasibility/
+    phase4_local_repair_loop/
     phase5_ranker/
     phase6_critic/
     phase7_adapter/
     phase8_model_induced/
 
   runs/
-    phase4_rule_repair/
+    phase4_0_backend_feasibility/
+    phase4_local_repair_loop/
     phase5_ranker/
     phase6_critic/
     phase7_adapter/
@@ -992,8 +959,9 @@ clash2feedback_gc/
     phase0_make_splits.py
     phase1_check_clashes.py
     phase2_inject_artificial_clashes.py
-    phase3_rule_locator.py
-    phase4_rule_repair.py
+    phase3_label_provenance_audit.py
+    phase4_backend_feasibility.py
+    phase4_local_repair_loop.py
     phase5_build_candidate_pool.py
     phase5_train_ranker.py
     phase6_train_critic.py
@@ -1010,12 +978,13 @@ clash2feedback_gc/
 
 1. clean complex 过滤和 processed 数据；
 2. 人工注入局部碰撞数据集；
-3. 规则定位和学习型定位对比；
-4. Random mask、Clash2Mask、Clash2Feedback-rule、Full method、Oracle 对比；
-5. 排序器 top-k 实验；
-6. 协议字段消融；
-7. 模型诱导失败集上的小规模验证；
-8. 3–5 个可视化案例。
+3. phase2 label provenance audit, circularity risk audit 和 phase4 mask seed；
+4. 阶段 4.0 backend feasibility audit；
+5. Random mask、Predicted mask、Structured predicted protocol、Full method、Oracle 对比；
+6. 排序器 top-k 实验；
+7. 协议字段消融；
+8. 模型诱导失败集上的小规模验证；
+9. 3–5 个可视化案例。
 
 强烈建议完成：
 
@@ -1044,7 +1013,7 @@ clash2feedback_gc/
 
 完整表述：
 
-> Clash2Feedback-GC 通过学习型纠错器定位失败取代基，通过反馈适配器将修复建议协议翻译成冻结三维生成器可执行的局部重画控制，并通过修复排序器和可靠验证器判断旧错误是否真正消除。第一篇实验重点证明：在局部 R-group 碰撞失败样本上，结构化反馈比随机 mask、单纯 clash mask 和完全重新生成更能提高可靠修复率，同时保持 scaffold 和非失败区域稳定。
+> Clash2Feedback-GC 先审计 controlled repair substrate 的标签来源和循环验证风险, 再冻结 attribution-derived operational mask policy, 通过同一 repair backend 和同一 candidate budget 下的 Random / Predicted / Oracle mask 对照评估 downstream repair utility。第一篇实验重点证明: 在 controlled local R-group collision repair substrate 上, predicted mask policy 和结构化修复协议是否比随机 mask 和完全重新生成更能提高可靠修复率, 同时保持 scaffold 和非失败区域稳定。
 
 ---
 

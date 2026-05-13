@@ -42,7 +42,7 @@
 \rightarrow
 \text{人工局部碰撞注入}
 \rightarrow
-\text{规则版定位与验证}
+\text{标签溯源与 mask seed 审计}
 }
 \]
 
@@ -100,10 +100,10 @@ Binding Success Rate
 |---|---|---|---:|---:|---|---|
 | 阶段 0 | 环境与数据格式打通 | 统一 protein、ligand、pocket、scaffold、R-groups、anchors 数据格式 | 否 | 否 | processed clean complexes | `data/processed/v0_1/` |
 | 阶段 1 | 碰撞检测器与可靠验证器 | 判断哪里发生碰撞、修复后是否真正成功 | 否 | 否 | clash detector、repair verifier | `src/clash2feedback/geometry/`、`src/clash2feedback/verifier/`、`reports/phase1_clash_detector/` |
-| 阶段 2 | 人工局部碰撞注入 | 构建带真实失败区域标签的数据 | 否 | 否 | ClashRepairBench-RG-artificial | `data/benchmarks/clashrepairbench_rg_artificial/v0_1/` |
+| 阶段 2 | 人工局部碰撞注入 | 构建带人工 target R-group 标签的 controlled repair substrate | 否 | 否 | ClashRepairBench-RG-artificial | `data/benchmarks/clashrepairbench_rg_artificial/v0_1/` |
 | 阶段 2.5 | 模型诱导失败外部有效性审计 | 审计 frozen generation baseline 的真实 failure distribution, 判断阶段 2 artificial benchmark 覆盖的真实失败子分布 | 否 | 是, 仅 frozen inference | model-induced failure taxonomy / gap analysis | `reports/phase2_5_model_induced_audit/`, `runs/phase2_5_model_induced_audit/` |
-| 阶段 3 | 规则版定位与反馈 | 验证规则 locator 能否找对失败 R-group | 否 | 否 | 规则定位结果表 | `reports/phase3_rule_locator/` |
-| 阶段 4 | 冻结生成器最小修复闭环 | 验证局部再生成是否能救回部分失败候选 | 否 | 是 | Random / Mask / Feedback / Oracle 对照 | `runs/phase4_rule_repair/`、`reports/phase4_rule_repair/` |
+| 阶段 3 | 标签溯源、循环验证风险审计与阶段 4 mask seed 生成 | 审计 phase2 标签来源和 attribution gate 依赖, 冻结 operational mask policy | 否 | 否 | provenance audit, construction consistency check, phase4 mask seed | `reports/phase3_label_provenance_audit/` |
+| 阶段 4 | backend feasibility audit 与局部修复闭环 | 先验证 repair backend 可用, 再比较 Random / Predicted / Oracle mask 的 downstream repair utility | 否 | 是 | backend feasibility, formal repair loop | `runs/phase4_0_backend_feasibility/`、`reports/phase4_0_backend_feasibility/`、`runs/phase4_local_repair_loop/`、`reports/phase4_local_repair_loop/` |
 | 阶段 5 | 候选池与修复排序器 | 训练排序器，从多个候选中选最可能成功的修复 | 是 | 是 | candidate pool、ranker | `data/candidate_pools/v0_1/`、`runs/phase5_ranker/` |
 | 阶段 6 | 学习型纠错器 | 学习预测失败区域、碰撞热区和严重度 | 是 | 可选 | learned critic | `runs/phase6_critic/`、`reports/phase6_critic/` |
 | 阶段 7 | 学习型反馈适配器 | 学习把修复协议转成生成器可执行控制 | 是 | 是 | learned adapter | `runs/phase7_adapter/`、`reports/phase7_adapter/` |
@@ -129,7 +129,7 @@ Binding Success Rate
 
 阶段 0 的目标是：
 
-> 让蛋白质—配体复合物可以被稳定读取、处理、保存和检查，为后续碰撞检测、人工注入、规则定位和生成修复打基础。
+> 让蛋白质—配体复合物可以被稳定读取、处理、保存和检查，为后续碰撞检测、人工注入、标签溯源和生成修复打基础。
 
 输入：
 
@@ -367,7 +367,7 @@ reports/phase1_clash_detector/
 
 ### 4.8 阶段 1 通过标准
 
-阶段 1 自身不以人工注入样本上的 R-group Top-1 / Top-3 作为关闭条件, 因为人工失败样本来自阶段 2, 规则定位评估属于阶段 3.
+阶段 1 自身不以人工注入样本上的 R-group Top-1 / Top-3 作为关闭条件, 因为人工失败样本来自阶段 2. 阶段 3 会把这些指标降级为 construction consistency check, 并同步审计循环验证风险.
 
 阶段 1 关闭条件:
 
@@ -384,13 +384,13 @@ reports/phase1_clash_detector/
 | verifier clean-vs-clean smoke test | 100% 或逐例解释 |
 | `python -m compileall src scripts` 和 `pytest` | 通过 |
 
-人工注入样本上的规则定位通过标准移动到阶段 3:
+人工注入样本上的 Top-1 / Top-3 不再作为阶段 3 independent locator benchmark:
 
-| 指标 | 最低要求 |
-|---|---:|
-| dominant ratio 平均值 | > 0.75 |
-| R-group Top-1 | > 70% |
-| R-group Top-3 | > 90% |
+| 项 | 阶段 3 新口径 |
+|---|---|
+| dominant ratio | construction consistency / data health observation |
+| R-group Top-1 | construction consistency check |
+| R-group Top-3 | construction consistency check |
 
 ---
 
@@ -451,7 +451,7 @@ RDKit MMFF / UFF 只能作为 ligand-only energy delta 粗筛, 不用于优化 p
 
 | split | 用途 |
 |---|---|
-| `supported_single_rgroup` | 阶段 3 Top-1 / Top-3 主评估 |
+| `supported_single_rgroup` | 阶段 3 label provenance audit / construction consistency check, 阶段 4 clean local repair substrate |
 | `ambiguous_region` | hard / reject split |
 | `multi_region` | reject split |
 | `scaffold_clash` | reject split |
@@ -489,177 +489,192 @@ reports/phase2_injection/
 | clash_severity | 碰撞严重度 |
 | dominant_ratio | 单区域主导程度 |
 
+标签使用边界:
+
+- `target_rgroup` 是人工扰动时选定并实际扰动的 R-group.
+- `supported_single_rgroup` 不是无偏 locator benchmark. 它是经过 ligand quality, detector, R-group attribution, `target_score_ratio_valid >= 0.7`, non-target / scaffold no-severe 和 max-depth gates 过滤后的 clean local repair substrate.
+- `target_score_ratio_valid` 来自 attribution-derived valid R-group scores. 因此后续在该主集上复用同一 attribution 规则计算 Top-1 / Top-3, 只能作为 construction consistency check, 不能作为 independent localization accuracy.
+
 ### 5.7 阶段 2.5 模型诱导失败外部有效性审计
 
 阶段 2.5 使用 frozen DiffSBDD baseline 做 model-induced failure external validity audit. 它先对 phase0/phase1 clean pockets 做 training-overlap audit, 再在可解释的 base pockets 上生成 candidates, 并对 all generated samples 做 ligand validity, protein-ligand clash, R-group attribution, failure taxonomy, repairability proxy 和 artificial-vs-model-induced gap analysis.
 
-阶段 2.5 不训练模型, 不做 repair, 不调参, 不做 baseline ranking, 不回改 `phase2_v0_1`. Generated ligand 没有人工 `target_rgroup`; predicted dominant R-group 只能作为 candidate local repair region, 不能作为 oracle ground truth 或阶段 3 Top-1 / Top-3 标签.
+阶段 2.5 不训练模型, 不做 repair, 不调参, 不做 baseline ranking, 不回改 `phase2_v0_1`. Generated ligand 没有人工 `target_rgroup`; predicted dominant R-group 只能作为 candidate local repair region, 不能作为 oracle ground truth, 也不进入阶段 3 construction consistency denominator.
 
-如果 DiffSBDD 仓库, checkpoint, official split, GPU 或数据缺失, 阶段 2.5 必须明确写 blocked 原因, 不编造 generation / taxonomy 结果. 阶段 2.5 不阻塞阶段 3; 阶段 3 主评估仍只使用 phase2 `supported_single_rgroup`.
+如果 DiffSBDD 仓库, checkpoint, official split, GPU 或数据缺失, 阶段 2.5 必须明确写 blocked 原因, 不编造 generation / taxonomy 结果. 阶段 2.5 不阻塞阶段 3; 阶段 2.5 的 model-induced samples 不进入阶段 3 的 construction consistency denominator.
 
 ---
 
-## 6. 阶段 3：规则版 Clash2Feedback
+## 6. 阶段 3：标签溯源、循环验证风险审计与阶段 4 mask seed 生成
 
 ### 6.1 目标
 
-不训练模型，先验证：
+阶段 3 仍叫阶段 3, 但不再承担 independent locator benchmark 职责. 阶段 3 的目标是:
 
-> 规则定位器是否能从人工失败样本中找对失败 R-group？
+1. 审计 `phase2_v0_1` 中 `target_rgroup` 和 `supported_single_rgroup` 的标签来源.
+2. 明确 detector / attribution / target-dominance gates 对 supported 主集的影响.
+3. 报告 circularity risk, 避免把同一套 attribution gate 筛出的样本再用于无偏证明同一 locator.
+4. 冻结现有 `detect_clashes()` + `attribute_clashes_to_rgroups()` 作为阶段 4 的 predicted mask policy.
+5. 生成阶段 4 需要的 oracle / predicted / random masks.
 
-### 6.2 规则反馈
+### 6.2 标签边界
 
-输入：
+阶段 2 的 `target_rgroup` 是人工扰动标签:
 
-\[
-(P,L_f,\mathcal R)
-\]
+```text
+人工选择 target R-group
+→ 对该 R-group 做 controlled perturbation
+→ 保存 target_rgroup
+```
 
-输出：
+但 `supported_single_rgroup` 是经过自动 gates 后得到的 clean local repair substrate:
 
-\[
-F_t=(M_t,E_t^{old},C_t^{keep},H_t^{clash},s_t,\tau_t)
-\]
+```text
+ligand quality
+→ protein-ligand clash detector
+→ R-group attribution
+→ target_score_ratio_valid >= 0.7
+→ non-target / scaffold no-severe
+→ max_depth gate
+→ supported_single_rgroup
+```
 
-其中：
-
-\[
-M_t=\arg\max_k Score_\alpha(R_k)
-\]
-
-\[
-C_t^{keep}=S\cup(\mathcal R\setminus M_t)
-\]
+其中 `target_score_ratio_valid` 来自 attribution-derived valid R-group scores. 因此, 在 `supported_single_rgroup` 上继续用同一套 attribution 规则计算 Top-1 / Top-3, 只能说明构造过程内部一致, 不能说明 locator 的无偏泛化定位能力.
 
 ### 6.3 阶段 3 产出
 
 ```text
-reports/phase3_rule_locator/
-  rule_locator_results.csv
+reports/phase3_label_provenance_audit/
+  phase2_label_provenance_audit.md
+  circularity_risk_audit.md
+  construction_consistency_report.csv
+  locator_stress_report_s0.csv
+  locator_stress_report_s1.csv
+  phase4_mask_seed.csv
   summary.json
-scripts/phase3_rule_locator.py
+  phase3_completion_audit.md
+scripts/phase3_label_provenance_audit.py
 ```
 
-### 6.4 评估指标和通过标准
+### 6.4 Construction Consistency Check
 
-阶段 3 只在 supported single-R-group synthetic failures 上计算主定位指标. Unsupported, scaffold clash, multi-region clash 和 global pose failure 不混入 Top-1 / Top-3 主指标, 但必须单独统计 reject / unsupported 分流是否正确.
+阶段 3 可以在 `supported_single_rgroup` 上报告 Top-1 / Top-3, 但表述必须改为 construction consistency check:
 
-| 指标 | 含义 | 最低要求 |
-|---|---|---:|
-| Coverage | supported single-R-group 样本中系统愿意进入 local repair 的比例 | 报告 |
-| Top-1 | reject 算 miss, 预测失败 R-group 是否正确 | > 70% |
-| Top-1 covered | 只看进入 local repair 的样本, locator 本身是否准确 | 报告 |
-| Top-3 rank | 真实失败 R-group 是否在 valid R-groups 前三 | > 90% |
-| Top-3 operational | 进入 local repair 且真实 R-group 在前三的比例 | 报告 |
-| dominant ratio valid 平均值 | valid R-group 内单区域主导程度 | > 0.75 |
-| Reject recall | hard / multi-region / scaffold / global pose case 是否被正确分流 | 报告 |
-| Unsupported recall | unsupported chemistry / mask case 是否被正确识别 | 报告 |
-| False local repair | reject 或 unsupported case 被误送入 local repair 的比例 | 越低越好 |
-| Atom-level F1 | 失败原子级定位质量 | 观察 |
-| Heatmap AUPRC | 蛋白碰撞热区质量 | 观察 |
-| Severity MAE | 严重度误差 | 观察 |
+| 项 | 口径 |
+|---|---|
+| Top-1 / Top-3 | construction consistency check, 非 independent localization benchmark |
+| Coverage | operational policy 覆盖率 |
+| Circularity risk | 明确 gate 与评估方法共享 detector / attribution 的程度 |
+| Phase4 mask seed completeness | oracle / predicted / random masks 是否可用于阶段 4 |
+| Stress split | reject / unsupported / ambiguous 等分流和敏感性分析 |
 
-Top-1 是主 operational 指标, reject 算 miss. Top-1 covered 用来判断 locator 在覆盖样本上的纯定位质量. Reject recall, unsupported recall 和 false local repair 是安全分流指标, 防止系统把不适合局部修复的 case 强行送入 single R-group repair.
+旧的通过标准需要降级:
+
+```text
+R-group Top-1 > 70%
+R-group Top-3 > 90%
+dominant ratio valid mean > 0.75
+```
+
+这些数字可作为内部构造一致性和数据健康度观察项, 不作为阶段 3 关闭条件或论文主 claim.
 
 ---
 
-## 7. 阶段 4：冻结生成器最小修复闭环
+## 7. 阶段 4：backend feasibility audit 与局部修复闭环
 
 ### 7.1 目标
 
-验证闭环是否能跑通：
-
-\[
-\text{失败定位}
-\rightarrow
-\text{局部重画}
-\rightarrow
-\text{可靠验证}
-\]
-
-此阶段仍然不训练纠错器和排序器。
-
-### 7.2 修复模式
-
-第一版先做固定拓扑局部再生成：
-
-\[
-L_f
-\rightarrow
-\text{局部部分加噪}
-\rightarrow
-\text{去噪}
-\rightarrow
-L_r
-\]
-
-保持：
-
-- 分子二维拓扑不变；
-- scaffold 固定；
-- 非失败 R-groups 固定；
-- 只扰动失败 R-group。
-
-如果生成器接口支持，再尝试 R-group inpainting：
-
-\[
-C_t^{keep}+\text{masked R-group}
-\rightarrow
-\text{new local group}
-\]
-
-### 7.3 第一批闭环配置
-
-| 项 | 建议值 |
-|---|---:|
-| 人工失败样本 | 30–50 个 |
-| 每个样本候选数 | \(K=8\) |
-| 最大轮数 | \(T_{max}=1\) |
-| 修复模式 | low-noise / mid-noise / high-noise |
-
-### 7.4 最小对照
-
-| 方法 | 含义 |
-|---|---|
-| Random mask | 随机选 R-group 重画 |
-| Clash2Mask-rule | 只使用规则定位的 \(M_t\) |
-| Clash2Feedback-rule | 使用 \(M_t+C_t^{keep}+s_t+\tau_t\) |
-| Oracle mask | 使用真实失败 R-group |
-
-### 7.5 阶段 4 产出
+阶段 4 的核心 claim 是 downstream repair utility:
 
 ```text
-runs/phase4_rule_repair/
-  raw_candidates/
-  logs/
-reports/phase4_rule_repair/
-  rule_repair_results.csv
-  summary.json
-scripts/phase4_rule_repair.py
+在同一 repair backend 和同一 candidate budget 下,
+Predicted mask repair 是否优于 size-matched Random mask repair,
+并接近 Oracle mask repair.
 ```
 
-### 7.6 通过标准
+阶段 4 的 predicted mask 来自现有 `detect_clashes()` + `attribute_clashes_to_rgroups()` 和 `dominant_valid_rgroup` / `top_valid_rgroups`. 它是 operational mask policy, 不是 ground truth, 也不是 verifier.
 
-期望趋势：
+### 7.2 阶段 4.0 backend feasibility audit
 
-\[
-\text{Random mask}
-<
-\text{Clash2Mask-rule}
-<
-\text{Clash2Feedback-rule}
-<
-\text{Oracle}
-\]
+正式闭环前先用 oracle mask 检查后端是否可用:
 
-至少应在以下指标上出现方向性趋势：
+```text
+reports/phase4_0_backend_feasibility/
+  backend_feasibility_summary.json
+  backend_feasibility_cases.csv
+  backend_candidate_manifest.csv
+  verifier_outcome.csv
+  blocked_backends.md
+  phase4_0_completion_audit.md
+runs/phase4_0_backend_feasibility/
+  diffdec/
+  diffsbdd_inpainting/
+  rule_only/
+  full_resampling/
+  logs/
+```
 
-| 指标 | 期望 |
+重点问题是:
+
+```text
+给正确 oracle mask, 后端能否稳定生成候选,
+接回 anchor, 保持 scaffold / keep region,
+并通过 reliable repair verifier?
+```
+
+DiffDec / DiffSBDD plain backend 在此阶段只能表述为 local constrained resampling 或 candidate inpainting backend. 除非实现 clash penalty / hot region guidance 并修改 sampling / denoising loop, 否则不得声称 `H_clash` 直接进入生成过程或完整 feedback-guided denoising.
+
+### 7.3 阶段 4.1 Random / Predicted / Oracle formal repair loop
+
+后端通过 feasibility audit 后, 再做正式对照:
+
+| 方法 | 口径 |
 |---|---|
-| Old Clash Resolved Rate | Clash2Feedback 更高 |
-| Reliable Repair Yield | Clash2Feedback 更高 |
-| Non-edit RMSD | Clash2Feedback 更低 |
-| New Clash Rate | Clash2Feedback 更低 |
+| Random mask | size-matched random R-group mask |
+| Predicted mask | operational mask policy 输出的 repair mask |
+| Oracle mask | 人工 `target_rgroup` 对应 mask, 只作为上限 |
+
+成功标准由 verifier 判断, 不能由 locator 自证:
+
+```text
+old clash resolved
+no new severe clash
+ligand validity
+scaffold RMSD
+non-mask RMSD
+anchor consistency
+fixed-region preservation
+```
+
+阶段 4.1 产出:
+
+```text
+reports/phase4_local_repair_loop/
+  summary.json
+  repair_candidate_manifest.csv
+  repair_outcome.csv
+  verifier_report.csv
+  baseline_comparison.csv
+  locality_metrics.csv
+  failure_cases.csv
+  phase4_completion_audit.md
+runs/phase4_local_repair_loop/
+  raw_candidates/
+  standardized_candidates/
+  logs/
+```
+
+### 7.4 阶段 4.2 可选 clash-guided denoising prototype
+
+如果要证明 `H_clash` / hot region feedback 进入生成过程, 需要实现 guided sampling:
+
+```text
+clash penalty
+hot region guidance
+sampling / denoising loop patch
+```
+
+在未实现这些机制前, 文档只能说 `H_clash` 参与 verifier / selector / adapter 输入, 不能说它直接指导 diffusion denoising.
 
 ---
 
@@ -934,7 +949,7 @@ scripts/phase7_train_adapter.py
 \]
 
 4. 排除 scaffold 整体错位和分子自身非法样本；
-5. 用规则定位或学习型纠错器产生 \(M_t\)；
+5. 用 operational mask policy 或学习型纠错器产生 \(M_t\)；
 6. 使用完整 Clash2Feedback-GC 流程尝试修复。
 
 ### 11.3 阶段 8 产出
@@ -968,15 +983,16 @@ scripts/phase8_model_induced_eval.py
 
 ### Mini-Loop 0：不调用生成器
 
-目标：验证数据、拆分、检测、注入、定位。
+目标：验证数据、拆分、检测、注入、标签溯源和阶段 4 mask seed。
 
 ```text
 20 个 clean complexes
 → scaffold / R-group 拆分
 → 每个 complex 注入 3–5 个局部 clash
 → 生成 60–100 个失败样本
-→ 规则 locator 定位失败 R-group
-→ 计算 Top-1 / Top-3
+→ 审计 supported_single_rgroup 的 gate 依赖
+→ 生成 phase4_mask_seed.csv
+→ 将 Top-1 / Top-3 降级为 construction consistency check
 ```
 
 通过标准：
@@ -985,16 +1001,19 @@ scripts/phase8_model_induced_eval.py
 |---|---:|
 | 有效人工失败样本比例 | > 50% |
 | 单区域主导比例 | > 70% |
-| 规则 locator Top-1 | > 70% |
-| 规则 locator Top-3 | > 90% |
+| phase2 label provenance audit | 完成 |
+| circularity risk level | 明确 |
+| phase4_mask_seed.csv | 生成 |
+| supported set Top-1 / Top-3 | 仅报告 construction consistency, 不设 independent locator 关闭线 |
 
 ### Mini-Loop 1：调用生成器但不训练模型
 
-目标：验证局部修复是否可能。
+目标：先验证 backend feasibility, 再比较 mask policy 的下游修复价值。
 
 ```text
 选择 30–50 个人工失败样本
-→ Random mask / Clash2Mask / Clash2Feedback / Oracle
+→ 阶段 4.0 用 Oracle mask 做 backend feasibility audit
+→ 阶段 4.1 比较 Random mask / Predicted mask / Oracle mask
 → 每个样本 K=8
 → T_max=1
 → 用验证器判断修复是否成功
@@ -1003,7 +1022,7 @@ scripts/phase8_model_induced_eval.py
 期望趋势：
 
 \[
-\text{Random mask}<\text{Clash2Mask}<\text{Clash2Feedback}<\text{Oracle}
+\text{Random mask}<\text{Predicted mask}<\text{Oracle mask}
 \]
 
 ### Mini-Loop 2：候选池和排序器
@@ -1115,15 +1134,17 @@ clash2feedback_gc/
     phase0/
     phase1_clash_detector/
     phase2_injection/
-    phase3_rule_locator/
-    phase4_rule_repair/
+    phase3_label_provenance_audit/
+    phase4_0_backend_feasibility/
+    phase4_local_repair_loop/
     phase5_ranker/
     phase6_critic/
     phase7_adapter/
     phase8_model_induced/
 
   runs/
-    phase4_rule_repair/
+    phase4_0_backend_feasibility/
+    phase4_local_repair_loop/
     phase5_ranker/
     phase6_critic/
     phase7_adapter/
@@ -1150,8 +1171,9 @@ clash2feedback_gc/
     phase0_make_splits.py
     phase1_check_clashes.py
     phase2_inject_artificial_clashes.py
-    phase3_rule_locator.py
-    phase4_rule_repair.py
+    phase3_label_provenance_audit.py
+    phase4_backend_feasibility.py
+    phase4_local_repair_loop.py
     phase5_build_candidate_pool.py
     phase5_train_ranker.py
     phase6_train_critic.py
@@ -1185,15 +1207,15 @@ clash2feedback_gc/
 - 原始样本是否已有严重碰撞；
 - scaffold 和 R-groups 是否拆分失败。
 
-### 决策点 2：规则定位是否有效？
+### 决策点 2：阶段 3 标签溯源是否清楚？
 
-如果规则 Top-1 很高：
+如果 label provenance 清楚且 circularity risk 已被明确标记：
 
-> 学习型纠错器可以作为增强。
+> 冻结现有 attribution 作为阶段 4 operational mask policy, 进入 backend feasibility audit。
 
-如果规则 Top-1 很低：
+如果 gate 依赖, label provenance 或 mask seed 不清楚：
 
-> 先修数据、碰撞定义和 R-group 拆分，不要急着训练模型。
+> 先修阶段 2 构造记录、碰撞定义和 R-group attribution 审计, 不要把 Top-1 / Top-3 写成独立定位能力。
 
 ### 决策点 3：冻结生成器是否能稳定保持 keep 区域？
 
@@ -1207,14 +1229,15 @@ clash2feedback_gc/
 
 先做固定拓扑局部姿态修复。
 
-### 决策点 4：Clash2Feedback 是否强于 Clash2Mask？
+### 决策点 4：Predicted mask 是否强于 Random mask？
 
-如果只比 mask 强一点点，需要强化：
+如果 Predicted mask repair 不能优于 size-matched Random mask repair, 需要先排查：
 
 - keep 区域保持实验；
-- severity-response 曲线；
-- 旧碰撞热区验证；
-- 排序器是否利用反馈信息。
+- verifier 是否过严或过松；
+- backend 是否无法尊重 mask / anchor / keep region；
+- predicted mask policy 是否过窄或过宽；
+- candidate budget 是否不足。
 
 ### 决策点 5：学习型 adapter 是否强于规则 adapter？
 
@@ -1242,7 +1265,7 @@ clash2feedback_gc/
 6. 保存 processed sample 和 manifest；
 7. 做基础原始碰撞 sanity check，筛出 clean complex。
 
-正式碰撞检测器、人工注入和规则 locator 放到阶段 1–3。
+正式碰撞检测器、人工注入和标签溯源 / mask seed 审计放到阶段 1–3。
 
 ---
 
@@ -1278,9 +1301,9 @@ clash2feedback_gc/
 \rightarrow
 \text{人工失败数据}
 \rightarrow
-\text{规则定位}
+\text{标签溯源与 mask seed}
 \rightarrow
-\text{冻结生成器闭环}
+\text{backend feasibility 与修复闭环}
 \rightarrow
 \text{排序器}
 \rightarrow

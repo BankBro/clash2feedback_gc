@@ -10,9 +10,13 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 
 阶段 1 方案详见 `docs/20260508-Clash2Feedback-GC_阶段1碰撞检测器与可靠验证器方案.md`. 阶段 1 默认使用 pocket-level receptor scope: `phase0_pocket8` 用于 old clash diagnosis 和 R-group attribution, `pocket10_all_atoms` 用于 local new clash check; full receptor check 为后续阶段可选扩展.
 
-阶段 2 方案详见 `docs/20260510-Clash2Feedback-GC_阶段2人工局部碰撞注入最终落地方案.md`. 阶段 2 构建 controlled synthetic failed pose benchmark, 不调用生成器, 不做 repair, 不做 whole protein-ligand complex minimization; 主评估集只使用 `supported_single_rgroup`.
+阶段 2 方案详见 `docs/20260510-Clash2Feedback-GC_阶段2人工局部碰撞注入最终落地方案.md`. 阶段 2 构建 controlled synthetic failed pose benchmark, 不调用生成器, 不做 repair, 不做 whole protein-ligand complex minimization; `target_rgroup` 是人工扰动标签, `supported_single_rgroup` 是经过 detector / attribution / target-dominance gates 过滤后的 clean local repair substrate.
 
-阶段 2.5 方案详见 `docs/20260511-Clash2Feedback-GC_阶段2.5模型诱导失败外部有效性审计落地方案.md`. 阶段 2.5 是 model-induced failure external validity audit: 使用 frozen generation baseline 生成 candidates, 审计 all generated samples 的 ligand validity, protein-ligand clash, R-group attribution, failure taxonomy 和 repairability proxy. 阶段 2.5 不训练模型, 不做 repair, 不做 baseline ranking, 不回改 `phase2_v0_1`, 也不把 model-induced samples 混入阶段 3 Top-1 / Top-3 主评估.
+阶段 2.5 方案详见 `docs/20260511-Clash2Feedback-GC_阶段2.5模型诱导失败外部有效性审计落地方案.md`. 阶段 2.5 是 model-induced failure external validity audit: 使用 frozen generation baseline 生成 candidates, 审计 all generated samples 的 ligand validity, protein-ligand clash, R-group attribution, failure taxonomy 和 repairability proxy. 阶段 2.5 不训练模型, 不做 repair, 不做 baseline ranking, 不回改 `phase2_v0_1`, 也不把 model-induced samples 混入阶段 3 construction consistency denominator.
+
+后续阶段 3 仍叫阶段 3, 但新口径是 label provenance audit, circularity risk audit, construction consistency check 和 phase4 mask seed generation. `supported_single_rgroup` 上的 Top-1 / Top-3 只能作为 construction consistency check, 不能作为 independent localization benchmark.
+
+后续阶段 4 将先做 backend feasibility audit, 再做 Random / Predicted / Oracle formal repair loop. 阶段 4 的 predicted mask 是 operational mask policy, 不是 ground truth; DiffDec / DiffSBDD plain backend 只能视为 local constrained resampling, 只有实现 clash penalty / hot region guidance 并改采样过程后, 才能声称 `H_clash` 进入生成过程.
 
 外部 frozen baseline 的长期可复现入口见 `docs/external_baselines.md`, 当前记录 DiffSBDD 的 source repo, pinned commit, checkpoint, 关键源码路径和输出口径.
 
@@ -202,7 +206,7 @@ conda run -n c2f_cpu python scripts/phase2_inject_artificial_clashes.py \
 - `reports/phase2_injection/summary.json`
 - `reports/phase2_injection/phase2_completion_audit.md`
 
-`predicted_dominant_*` 字段只记录阶段 1 attribution 结果, 不作为阶段 2 主集保留条件. 所有 injected variants 继承 base complex split.
+`predicted_dominant_*` 字段只记录阶段 1 attribution 结果, 不作为阶段 2 主集保留条件. 但 `target_score_ratio_valid` 来自 attribution-derived valid R-group scores, 因此 supported 主集后续只作为 clean local repair substrate 和 construction consistency check 输入. 所有 injected variants 继承 base complex split.
 
 ## 8. 阶段 2.5 用法
 

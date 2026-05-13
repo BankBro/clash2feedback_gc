@@ -30,6 +30,8 @@
 阶段 2 artificial benchmark 是否覆盖所有真实失败。
 ```
 
+当前最终报告见 `reports/phase2_5_model_induced_audit/phase2_5_final_experiment_report.md`. 报告显示本轮 frozen DiffSBDD de novo complete-ligand audit 生成 `200 unique candidates`, 其中 `single_rgroup_clash` 仅 `1 / 200 = 0.5%`, 且 `local_rgroup_repair_possible = 0`. 因此阶段 2.5 的结论应收窄为 external validity / distribution-gap audit, 不能写成真实 de novo failures 主要是 R-group clash, 也不能作为 repair success evidence.
+
 ---
 
 ## 1. 阶段边界
@@ -65,8 +67,16 @@
 不调参以提高生成质量；
 不默认做 relax / redock / whole-complex minimization；
 不把 predicted dominant R-group 当真值；
-不把 model-induced samples 混进阶段 3 Top-1 / Top-3 主评估；
+不把 model-induced samples 混进阶段 3 construction consistency denominator；
 不回改 phase2_v0_1 artificial benchmark。
+```
+
+补充边界:
+
+```text
+model-induced samples 不进入阶段 3 construction consistency denominator；
+single_rgroup_clash 是 detector / attribution taxonomy, 不是 oracle target R-group；
+dominant_valid_rgroup 只能作为 candidate local repair region, 不能计算 locator accuracy。
 ```
 
 ---
@@ -1073,14 +1083,14 @@ reports/phase2_5_model_induced_audit/phase2_5_completion_audit.md
 阶段 2.5 不阻塞阶段 3。
 
 ```text
-阶段 3：在 phase2 supported_single_rgroup 上评估 rule locator Top-1 / Top-3。
+阶段 3：对 phase2 supported_single_rgroup 做 label provenance audit, circularity risk audit, construction consistency check 和 phase4 mask seed generation。
 阶段 2.5：审计真实 frozen generator 产生的 failure distribution。
 ```
 
 阶段 2.5 不等于阶段 4。
 
 ```text
-阶段 4：repair loop。
+阶段 4：先做 backend feasibility audit, 再做 Random / Predicted / Oracle formal repair loop。
 阶段 2.5：no repair，只审计。
 ```
 
