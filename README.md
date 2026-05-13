@@ -18,6 +18,8 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 
 后续阶段 4 将先做 backend feasibility audit, 再做 Random / Predicted / Oracle formal repair loop. 阶段 4 的 predicted mask 是 operational mask policy, 不是 ground truth; DiffDec / DiffSBDD plain backend 只能视为 local constrained resampling, 只有实现 clash penalty / hot region guidance 并改采样过程后, 才能声称 `H_clash` 进入生成过程.
 
+`reports/phase2_injection/phase2_final_report.md` 是历史阶段 2 关闭报告, 其中保留的阶段 3 Top-1 / Top-3 建议属于旧口径. 当前后续执行以 `docs/` 中更新后的阶段 3 新口径为准, 不回写历史实验报告.
+
 外部 frozen baseline 的长期可复现入口见 `docs/external_baselines.md`, 当前记录 DiffSBDD 的 source repo, pinned commit, checkpoint, 关键源码路径和输出口径.
 
 ## 2. 目录结构

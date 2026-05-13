@@ -823,8 +823,10 @@ d_{ij}<8\text{ Å}
 其中：
 
 \[
-\mathcal L_{mask}=\text{CE}(\hat M,M^*)
+\mathcal L_{mask}=\text{CE}(\hat M,M_{label})
 \]
+
+其中 \(M_{label}\) 必须来自阶段 3 审计后的标签口径. 对 phase2 artificial supported set, 可用 `target_rgroup` 作为人工注入标签; 对 attribution-derived policy, 只能作为 construction consistency 或后续无泄漏评估的候选标签, 不能把 `Score_\alpha` 定义成 independent ground truth.
 
 \[
 \mathcal L_{heat}=\text{MSE}(\hat H,H^{clash})
@@ -850,10 +852,10 @@ scripts/phase6_train_critic.py
 
 | 指标 | 要求 |
 |---|---|
-| R-group Top-1 | 接近或超过规则版 |
+| R-group Top-1 / Top-3 | 仅在无泄漏或明确标注 construction-consistency 的设置下报告 |
 | Heatmap AUPRC | 高于简单距离 baseline |
 | Severity MAE | 明显低于均值预测 |
-| 下游修复率 | 不低于规则版定位 |
+| 下游修复率 | 不低于 operational mask policy baseline |
 
 如果学习型纠错器不如规则版，不要硬把它作为主方法。
 
