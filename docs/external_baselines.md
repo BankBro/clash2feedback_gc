@@ -12,10 +12,12 @@
 
 ```text
 Model: DiffSBDD
-Source repo: https://github.com/arneschneuing/DiffSBDD.git
+Source repo: https://github.com/BankBro/DiffSBDD.git
+Upstream source: https://github.com/arneschneuing/DiffSBDD.git
 Pinned commit: 5d0d38d16c8932a0339fd2ce3f67ade98bbdff27
 Local path: external/DiffSBDD/
 Primary entrypoint: external/DiffSBDD/generate_ligands.py
+Inpainting entrypoint: external/DiffSBDD/inpaint.py
 Conda environment: diffsbdd
 Mode in this project: frozen inference only
 ```
@@ -93,7 +95,15 @@ limitation:
 ### 3.2 DiffDec
 
 ```text
-status: to_be_verified_locally
+status: source_cloned_from_fork_to_be_verified_locally
+source repo: https://github.com/BankBro/DiffDec.git
+pinned commit: 916ae14207b2783a90336bb8509374535c5791f9
+local path: external/DiffDec/
+primary entrypoints:
+  - external/DiffDec/sample_single_for_specific_context.py
+  - external/DiffDec/sample_multi.py
+conda environment: to_be_created_or_verified
+checkpoint status: not_downloaded_or_verified
 role:
   - scaffold decoration / R-group generation candidate backend
   - 阶段 4.0 backend feasibility audit 第一优先核查对象之一
