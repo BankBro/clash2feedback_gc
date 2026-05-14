@@ -1,0 +1,135 @@
+schema_version: "phase4_0_backend_feasibility_v0_1"
+seed: 20260514
+mode: "formal"
+
+inputs:
+  phase4_mask_seed: "reports/phase3_label_provenance_audit/phase4_mask_seed.csv"
+  phase2_benchmark_root: "data/benchmarks/clashrepairbench_rg_artificial/v0_1"
+  phase2_manifest: "data/benchmarks/clashrepairbench_rg_artificial/v0_1/manifest.parquet"
+  processed_root: "data/processed/v0_1"
+  phase1_config: "configs/phase1_clash_detector.yaml"
+
+outputs:
+  report_root: "reports/phase4_0_backend_feasibility"
+  run_root: "runs/phase4_0_backend_feasibility"
+
+selection:
+  preflight_count: 5
+  small_scale_count: 40
+  base_sample_soft_cap: 3
+  small_scale_quotas:
+    injection_mode:
+      directed_clash: 14
+      easy_rotation: 13
+      torsion_perturb: 13
+    difficulty_bin:
+      easy: 27
+      medium: 13
+    base_split:
+      train: 29
+      test: 9
+      val: 2
+  predefined_preflight_cases:
+    - case_id: "case_001001"
+      selection_reason: "directed test easy, mask/depth moderate"
+    - case_id: "case_001243"
+      selection_reason: "easy_rotation test easy"
+    - case_id: "case_000982"
+      selection_reason: "torsion test easy"
+    - case_id: "case_001238"
+      selection_reason: "test medium coverage"
+    - case_id: "case_000703"
+      selection_reason: "medium non-directed supplement"
+
+candidate_budget:
+  k: 8
+
+verifier:
+  fixed_structure_match_tolerance_angstrom: 0.35
+  keep_region_rmsd_threshold: 0.8
+
+backends:
+  rule_fixed_topology:
+    enabled: true
+    backend_name: "rule_fixed_topology"
+    backend_unit: "fixed_topology_local_conformer_repair"
+    single_axis_angles_deg: [-180, -150, -120, -90, -60, -45, -30, 30, 45, 60, 90, 120, 150, 180]
+    torsion_angles_deg: [-120, -60, 60, 120, 180]
+    dedup_rmsd_angstrom: 0.1
+  diffsbdd_conditional_inpainting:
+    enabled: true
+    execute: true
+    backend_name: "diffsbdd_conditional_inpainting"
+    backend_unit: "crossdocked_fullatom_conditional_local_completion"
+    external_repo: "external/DiffSBDD"
+    checkpoint_path: "external/DiffSBDD/checkpoints/crossdocked_fullatom_cond.ckpt"
+    expected_repo_commit: "5d0d38d16c8932a0339fd2ce3f67ade98bbdff27"
+    expected_checkpoint_md5: "166b0c056b31ffdf31d489a63e91e05b"
+    expected_checkpoint_sha256: "07f86764bf569aafbc40a9c15fc02de8e2550437dd0f17f657eab3abe66c372c"
+    conda_env: "diffsbdd"
+    python_executable: "python"
+    centers: ["ligand", "pocket"]
+    n_samples: 8
+    resamplings: 1
+    timesteps: 50
+    sanitize: false
+    relax: false
+    timeout_sec: 180
+    cuda_visible_devices: ""
+    uses_h_clash_in_generation: false
+  diffsbdd_full_resampling:
+    enabled: true
+    execute: true
+    backend_name: "diffsbdd_full_resampling"
+    backend_unit: "crossdocked_fullatom_conditional_full_ligand_resampling"
+    external_repo: "external/DiffSBDD"
+    checkpoint_path: "external/DiffSBDD/checkpoints/crossdocked_fullatom_cond.ckpt"
+    expected_repo_commit: "5d0d38d16c8932a0339fd2ce3f67ade98bbdff27"
+    expected_checkpoint_md5: "166b0c056b31ffdf31d489a63e91e05b"
+    expected_checkpoint_sha256: "07f86764bf569aafbc40a9c15fc02de8e2550437dd0f17f657eab3abe66c372c"
+    conda_env: "diffsbdd"
+    python_executable: "python"
+    n_samples: 8
+    batch_size: 8
+    resamplings: 1
+    jump_length: 1
+    timesteps: 50
+    sanitize: false
+    relax: false
+    all_frags: false
+    use_failed_ligand_atom_count: true
+    timeout_sec: 180
+    cuda_visible_devices: ""
+    uses_h_clash_in_generation: false
+  diffsbdd_joint_inpainting:
+    enabled: true
+    execute: false
+    adapter_supported: false
+    adapter_blocked_reason: "official_inpaint_entrypoint_incompatible_with_joint_checkpoint:center_argument"
+    backend_name: "diffsbdd_joint_inpainting"
+    backend_unit: "crossdocked_fullatom_joint_local_completion"
+    external_repo: "external/DiffSBDD"
+    checkpoint_path: "external/DiffSBDD/checkpoints/crossdocked_fullatom_joint.ckpt"
+    expected_repo_commit: "5d0d38d16c8932a0339fd2ce3f67ade98bbdff27"
+    expected_checkpoint_md5: "f9291871ccf820d273607e4fb816cafc"
+    conda_env: "diffsbdd"
+  diffdec_single_rgroup:
+    enabled: true
+    execute: true
+    backend_name: "diffdec_single_rgroup"
+    backend_unit: "single_substituent_local_completion"
+    external_repo: "external/DiffDec"
+    checkpoint_path: "external/DiffDec/ckpt/diffdec_single.ckpt"
+    conda_env: "DiffDec"
+    python_executable: "python"
+    n_samples: 8
+    device: "cuda:0"
+    timeout_sec: 300
+
+guards:
+  forbidden_diff_paths:
+    - "reports/phase2_injection"
+    - "reports/phase2_5_model_induced_audit"
+    - "reports/phase3_label_provenance_audit"
+    - "data/benchmarks/clashrepairbench_rg_artificial/v0_1"
+  immutable_mask_seed: "reports/phase3_label_provenance_audit/phase4_mask_seed.csv"

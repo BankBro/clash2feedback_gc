@@ -1,0 +1,6 @@
+backend_name,selected_case_denominator,attempt_rows,candidate_rows,proposal_count_sum,candidate_count_sum,failure_attempts,failure_rows,reliable_candidate_success_count,sample_reliable_success_count,candidate_readable_count,fixed_structure_match_success_count,anchor_integrity_success_count
+diffdec_single_rgroup,40,40,313,320,312,1,1,0,0,312,312,309
+diffsbdd_conditional_inpainting,40,80,626,640,624,2,2,17,9,624,624,252
+diffsbdd_full_resampling,40,40,320,320,320,0,0,0,0,320,0,0
+diffsbdd_joint_inpainting,40,40,40,0,0,40,40,0,0,0,0,0
+rule_fixed_topology,40,40,320,1200,320,0,0,227,38,320,320,320

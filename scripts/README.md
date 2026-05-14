@@ -88,3 +88,19 @@ python scripts/phase3_label_provenance_audit.py \
 ```
 
 `phase3_label_provenance_audit.py` 只读 phase2 benchmark, phase2 reports, processed base samples 和 phase2.5 reports, 生成 label provenance audit, circularity risk audit, construction consistency report 和 `phase4_mask_seed.csv`. 阶段 3 不训练模型, 不调用生成器, 不修复分子, 不把 phase2.5 model-induced rows 混入 construction consistency denominator.
+
+## 7. 阶段 4.0 backend feasibility 命令
+
+```bash
+python scripts/phase4_0_backend_feasibility.py \
+  --config configs/phase4_0_backend_feasibility.yaml \
+  --mode preflight
+```
+
+```bash
+python scripts/phase4_0_backend_feasibility.py \
+  --config configs/phase4_0_backend_feasibility.yaml \
+  --mode formal
+```
+
+`phase4_0_backend_feasibility.py` 实现阶段 4.0 后端可行性审计闭环: `preflight` 冻结 5 个 S2 case, `formal` 选择 40 个 S2 case. 脚本运行规则型固定拓扑局部构象修复, DiffSBDD CrossDocked full-atom conditional local completion, DiffSBDD full-ligand resampling 和 DiffDec single R-group scaffold decoration, 并把所有候选或失败尝试送入统一 verifier adapter. DiffSBDD joint checkpoint 可被 inventory 记录, 但官方 inpaint 入口不兼容时写入 blocked. 该脚本不训练/微调模型, 不修改 DiffSBDD/DiffDec 原始源码, 不回写阶段 2/2.5/3 历史结果.

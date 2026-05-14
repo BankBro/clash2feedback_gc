@@ -113,3 +113,23 @@
 - `phase3_final_experiment_report.md`
 
 这些报告记录 label provenance, circularity risk, S0/S1/S2 集合定义, S2 construction consistency check 和阶段 4 mask seed. `phase4_mask_seed.csv` 只使用 phase2 `supported_single_rgroup` 作为阶段 4 主输入. `random_mask_balance_summary.csv` 是收尾核查派生统计, 仅用于记录 random mask 与 oracle/predicted mask 的大小差异, 不回写阶段 3 核心结果. `phase3_final_experiment_report.md` 是阶段 3 最终汇总报告. 阶段 3 不声明 independent locator benchmark.
+
+## 7. 阶段 4.0 backend feasibility 报告
+
+`reports/phase4_0_backend_feasibility/` 由阶段 4.0 backend feasibility CLI 生成:
+
+- `selected_cases_preflight.csv`
+- `selected_cases.csv`
+- `model_inventory.csv`
+- `adapter_input_manifest.csv`
+- `candidate_manifest.csv`
+- `verifier_outcome.csv`
+- `backend_preflight_report.md`
+- `backend_comparison.csv`
+- `failure_cases.csv`
+- `blocked_backends.md`
+- `phase4_0_preflight_summary.json`
+- `phase4_0_small_scale_summary.json`
+- `phase4_0_completion_audit.md`
+
+这些报告覆盖 5 case preflight 和 40 case formal 小规模后端可行性审计. 规则型后端候选, DiffSBDD adapter/log, DiffSBDD full-resampling 输出和 DiffDec 输出放在 `runs/phase4_0_backend_feasibility/`. 阶段 4.0 不训练/微调模型, 不修改 DiffSBDD/DiffDec 原始源码, 不回写阶段 2/2.5/3 历史报告.

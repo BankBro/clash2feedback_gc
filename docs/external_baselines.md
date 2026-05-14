@@ -35,12 +35,20 @@ external/DiffSBDD/utils.py::write_sdf_file
 ### 2.2 Checkpoint Provenance
 
 ```text
-Checkpoint name: crossdocked_fullatom_cond.ckpt
-Checkpoint URL: https://zenodo.org/records/8183747/files/crossdocked_fullatom_cond.ckpt?download=1
-Local path: external/DiffSBDD/checkpoints/crossdocked_fullatom_cond.ckpt
-MD5: 166b0c056b31ffdf31d489a63e91e05b
-SHA256: 07f86764bf569aafbc40a9c15fc02de8e2550437dd0f17f657eab3abe66c372c
-File size: 17861341 bytes
+Primary checkpoint name: crossdocked_fullatom_cond.ckpt
+Primary checkpoint URL: https://zenodo.org/records/8183747/files/crossdocked_fullatom_cond.ckpt?download=1
+Primary local path: external/DiffSBDD/checkpoints/crossdocked_fullatom_cond.ckpt
+Primary MD5: 166b0c056b31ffdf31d489a63e91e05b
+Primary SHA256: 07f86764bf569aafbc40a9c15fc02de8e2550437dd0f17f657eab3abe66c372c
+Primary file size: 17861341 bytes
+Additional local checkpoints downloaded for phase4.0 inventory:
+  - crossdocked_fullatom_joint.ckpt: MD5 f9291871ccf820d273607e4fb816cafc, SHA256 4e0f8727c7e4c9d8c8963927ac218a9b6f777104c396f0f8c7aa4a0b88e598bd
+  - crossdocked_ca_cond.ckpt: MD5 e29520a99ceefe244f08d0429312bf15, SHA256 cc96a8cbb52c94db638a9d56c7b381bc7e517418fbed6cd7e1bf1df488e5ff20
+  - crossdocked_ca_joint.ckpt: MD5 64ec4c3405afb847dc8fbb7a0e33c25b, SHA256 b66cf6b6e61300c561c8d4c4418cb0e5474ed18a95524942460acb58449615f9
+  - moad_ca_cond.ckpt: MD5 487759042e9386c3afe22a0ae4cad898, SHA256 ef5d62a07a031b9d2032f5ebf0835d9244706e71bb621fd36d9b305fec58e58f
+  - moad_ca_joint.ckpt: MD5 d51ef07cd6d0d3ebfb430dcf65f23de7, SHA256 0b0fd3c9483afbe48f6717d3aa88fb216669c3f6e625646500f4db15331fd13c
+  - moad_fullatom_cond.ckpt: MD5 49e0c0a3ca7468bd8998e353308e6cec, SHA256 58bd5f6c532e64a727f92779c6d3d7f274e5df7b0d345e4900a99dd341192561
+  - moad_fullatom_joint.ckpt: MD5 d1294c7c81bb6016d5d712ce24f071a2, SHA256 b16aebaab0a71ee0295c990fbea50cfca23aadf410fc263c646483653e99f494
 ```
 
 ### 2.3 Output Contract Used By Clash2Feedback-GC
@@ -95,15 +103,21 @@ limitation:
 ### 3.2 DiffDec
 
 ```text
-status: source_cloned_from_fork_to_be_verified_locally
+status: verified_for_phase4_0_frozen_single_rgroup_inference
 source repo: https://github.com/BankBro/DiffDec.git
 pinned commit: 916ae14207b2783a90336bb8509374535c5791f9
 local path: external/DiffDec/
 primary entrypoints:
   - external/DiffDec/sample_single_for_specific_context.py
   - external/DiffDec/sample_multi.py
-conda environment: to_be_created_or_verified
-checkpoint status: not_downloaded_or_verified
+conda environment: DiffDec
+checkpoint status: downloaded_and_verified_for_phase4_0
+single checkpoint: external/DiffDec/ckpt/diffdec_single.ckpt
+single checkpoint MD5: 9be531ec26376d8282c69d6c58630324
+single checkpoint SHA256: 59776b4049ff6bcc068ae0a551a1271a48f164ff8b7bec6e6f8d6846c635129b
+multi checkpoint: external/DiffDec/ckpt/diffdec_multi.ckpt
+multi checkpoint MD5: 5c345e172ee6f1ab55a81d91515baa4a
+multi checkpoint SHA256: bae7c56a61eb3454cf69dd6febdb6dd93b91e7fd6dc0851fd0854a3dd0356591
 role:
   - scaffold decoration / R-group generation candidate backend
   - 阶段 4.0 backend feasibility audit 第一优先核查对象之一

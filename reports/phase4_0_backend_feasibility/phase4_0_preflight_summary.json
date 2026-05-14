@@ -1,0 +1,62 @@
+{
+  "schema_version": "phase4_0_backend_feasibility_preflight_v0_1",
+  "mode": "preflight_only",
+  "selected_case_count": 5,
+  "selected_case_ids": [
+    "case_001001",
+    "case_001243",
+    "case_000982",
+    "case_001238",
+    "case_000703"
+  ],
+  "preflight_expected_case_count": 5,
+  "formal_40_case_results_generated": false,
+  "training_or_finetuning_performed": false,
+  "h_clash_used_in_diffsbdd_generation": false,
+  "phase4_mask_seed_sha256_before": "18cea12cc4f92a8f21f6f9de83c2ba551556e35a19e9d781d3a98f79b99097cc",
+  "phase4_mask_seed_sha256_after": "18cea12cc4f92a8f21f6f9de83c2ba551556e35a19e9d781d3a98f79b99097cc",
+  "phase4_mask_seed_unchanged": true,
+  "blocked_backend_count": 2,
+  "backend_summary": {
+    "diffdec_single_rgroup": {
+      "selected_case_denominator": 5,
+      "candidate_rows": 5,
+      "attempt_rows": 5,
+      "candidate_count_sum": 0,
+      "proposal_count_sum": 0,
+      "failure_rows": 5,
+      "failure_attempts": 5,
+      "sample_reliable_success_count": 0
+    },
+    "diffsbdd_conditional_inpainting": {
+      "selected_case_denominator": 5,
+      "candidate_rows": 10,
+      "attempt_rows": 10,
+      "candidate_count_sum": 0,
+      "proposal_count_sum": 80,
+      "failure_rows": 10,
+      "failure_attempts": 10,
+      "sample_reliable_success_count": 0
+    },
+    "diffsbdd_joint_inpainting": {
+      "selected_case_denominator": 5,
+      "candidate_rows": 5,
+      "attempt_rows": 5,
+      "candidate_count_sum": 0,
+      "proposal_count_sum": 0,
+      "failure_rows": 5,
+      "failure_attempts": 5,
+      "sample_reliable_success_count": 0
+    },
+    "rule_fixed_topology": {
+      "selected_case_denominator": 5,
+      "candidate_rows": 40,
+      "attempt_rows": 5,
+      "candidate_count_sum": 40,
+      "proposal_count_sum": 145,
+      "failure_rows": 0,
+      "failure_attempts": 0,
+      "sample_reliable_success_count": 4
+    }
+  }
+}

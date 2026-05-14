@@ -16,7 +16,7 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 
 阶段 3 仍叫阶段 3, 新口径是 label provenance audit, circularity risk audit, construction consistency check 和 phase4 mask seed generation. `supported_single_rgroup` 上的 Top-1 / Top-3 只能作为 construction consistency check, 不能作为 independent localization benchmark. 阶段 3 不训练模型, 不调用生成器, 不修复分子.
 
-后续阶段 4 将先做 backend feasibility audit, 再做 Random / Predicted / Oracle formal repair loop. 阶段 4 的 predicted mask 是 operational mask policy, 不是 ground truth; DiffDec / DiffSBDD plain backend 只能视为 local constrained resampling, 只有实现 clash penalty / hot region guidance 并改采样过程后, 才能声称 `H_clash` 进入生成过程.
+阶段 4 当前新增 `phase4_0_backend_feasibility` 后端可行性审计闭环: 支持 5 case preflight 和 40 case formal 小规模审计, 核查规则型固定拓扑局部构象修复, DiffSBDD CrossDocked full-atom conditional local completion, DiffSBDD full-ligand resampling 和 DiffDec single R-group scaffold decoration 是否能接入统一 verifier adapter. 该阶段不训练/微调模型, 不修改阶段 2/2.5/3 历史结果, 也不把 `H_clash` 写入 DiffSBDD/DiffDec 生成过程. DiffSBDD joint checkpoint 已进入 inventory, 但官方 inpaint 入口与 joint checkpoint 不兼容, 因此记录为 blocked. 后续阶段 4.1 才讨论 Random / Predicted / Oracle formal repair loop.
 
 `reports/phase2_injection/phase2_final_report.md` 是历史阶段 2 关闭报告, 其中保留的阶段 3 Top-1 / Top-3 建议属于旧口径. 当前后续执行以 `docs/` 中更新后的阶段 3 新口径为准, 不回写历史实验报告.
 
@@ -278,6 +278,42 @@ conda run -n c2f_cpu python scripts/phase3_label_provenance_audit.py \
 
 `phase4_mask_seed.csv` 仅以 phase2 `supported_single_rgroup` 作为阶段 4 主输入. 参考掩码来自 `target_rgroup` 对应整个 R 基, predicted mask 来自 `predicted_dominant_valid_rgroup` 对应整个 R 基, random mask 是同一配体中 size-matched 的合法 single-anchor R 基. Anchor 单独记录, 不默认加入自由编辑掩码. 阶段 2.5 model-induced rows 不进入 construction consistency denominator.
 
-## 10. 协作说明
+## 10. 阶段 4.0 backend feasibility 用法
+
+运行 5 case 后端可行性 preflight:
+
+```bash
+conda run -n c2f_cpu python scripts/phase4_0_backend_feasibility.py \
+  --config configs/phase4_0_backend_feasibility.yaml \
+  --mode preflight
+```
+
+运行 40 case formal 小规模审计:
+
+```bash
+conda run -n c2f_cpu python scripts/phase4_0_backend_feasibility.py \
+  --config configs/phase4_0_backend_feasibility.yaml \
+  --mode formal
+```
+
+主要输出:
+
+- `reports/phase4_0_backend_feasibility/selected_cases_preflight.csv`
+- `reports/phase4_0_backend_feasibility/selected_cases.csv`
+- `reports/phase4_0_backend_feasibility/model_inventory.csv`
+- `reports/phase4_0_backend_feasibility/adapter_input_manifest.csv`
+- `reports/phase4_0_backend_feasibility/candidate_manifest.csv`
+- `reports/phase4_0_backend_feasibility/verifier_outcome.csv`
+- `reports/phase4_0_backend_feasibility/backend_preflight_report.md`
+- `reports/phase4_0_backend_feasibility/backend_comparison.csv`
+- `reports/phase4_0_backend_feasibility/failure_cases.csv`
+- `reports/phase4_0_backend_feasibility/blocked_backends.md`
+- `reports/phase4_0_backend_feasibility/phase4_0_preflight_summary.json`
+- `reports/phase4_0_backend_feasibility/phase4_0_small_scale_summary.json`
+- `reports/phase4_0_backend_feasibility/phase4_0_completion_audit.md`
+
+较重候选和外部命令日志写入 `runs/phase4_0_backend_feasibility/`, 默认不提交. DiffSBDD conditional inpainting 使用 frozen checkpoint 和 wrapper 适配输入; DiffSBDD full resampling 作为全配体重采样对照; DiffDec 使用专用 `DiffDec` conda 环境和 `diffdec_single.ckpt`; DiffSBDD joint 当前因官方 inpaint 入口不兼容记录为 blocked, 不阻塞主线.
+
+## 11. 协作说明
 
 修改仓库前先阅读根目录 `AGENTS.md`. 修改主目录内文件时, 同步阅读该目录下的 `AGENTS.md`.
