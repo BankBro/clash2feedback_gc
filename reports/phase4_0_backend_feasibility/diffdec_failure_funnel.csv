@@ -1,0 +1,17 @@
+metric,count,denominator,rate,notes
+attempts,40,40,1.000000,DiffDec formal attempts.
+execution_failures,1,40,0.025000,Execution-level failures before candidates.
+generated_candidates,312,312,1.000000,Candidates emitted by attempts.
+readable_candidates,312,312,1.000000,
+ligand_valid,311,312,0.996795,
+fixed_structure_match_success,312,312,1.000000,
+anchor_integrity_success,309,312,0.990385,
+generated_atom_count_mismatch,194,312,0.621795,Adapter mapping failure reason.
+generated_atom_element_mismatch,112,312,0.358974,Adapter mapping failure reason.
+old_clash_resolved,0,312,0.000000,
+no_new_severe_clash,6,312,0.019231,
+scaffold_stable,6,312,0.019231,
+keep_region_stable,312,312,1.000000,
+edit_compliance,6,312,0.019231,
+pocket_retention,6,312,0.019231,
+reliable_success,0,312,0.000000,

@@ -16,7 +16,7 @@ Clash2Feedback-GC 是一个面向生成式分子设计的工程与实验项目. 
 
 阶段 3 仍叫阶段 3, 新口径是 label provenance audit, circularity risk audit, construction consistency check 和 phase4 mask seed generation. `supported_single_rgroup` 上的 Top-1 / Top-3 只能作为 construction consistency check, 不能作为 independent localization benchmark. 阶段 3 不训练模型, 不调用生成器, 不修复分子.
 
-阶段 4 当前新增 `phase4_0_backend_feasibility` 后端可行性审计闭环: 支持 5 case preflight 和 40 case formal 小规模审计, 核查规则型固定拓扑局部构象修复, DiffSBDD CrossDocked full-atom conditional local completion, DiffSBDD full-ligand resampling 和 DiffDec single R-group scaffold decoration 是否能接入统一 verifier adapter. 该阶段不训练/微调模型, 不修改阶段 2/2.5/3 历史结果, 也不把 `H_clash` 写入 DiffSBDD/DiffDec 生成过程. DiffSBDD joint checkpoint 已进入 inventory, 但官方 inpaint 入口与 joint checkpoint 不兼容, 因此记录为 blocked. 后续阶段 4.1 才讨论 Random / Predicted / Oracle formal repair loop.
+阶段 4 当前新增 `phase4_0_backend_feasibility` 后端可行性审计闭环: 支持 5 case preflight 和 40 case formal 小规模审计, 核查规则型固定拓扑局部构象修复, DiffSBDD CrossDocked full-atom conditional local completion, DiffSBDD full-ligand resampling 和 DiffDec single R-group scaffold decoration 是否能接入统一 verifier adapter. 该阶段不训练/微调模型, 不修改阶段 2/2.5/3 历史结果, 也不把 `H_clash` 写入 DiffSBDD/DiffDec 生成过程. DiffSBDD joint checkpoint 已进入 inventory, 但官方 inpaint 入口与 joint checkpoint 不兼容, 因此记录为 blocked. `scripts/phase4_0_closeout_diagnostics.py` 只读取既有阶段 4.0 结果并生成派生收尾诊断表和解释报告, 为 `phase4_0_final_experiment_report.md` 做准备, 不重跑任何 repair backend. 后续阶段 4.1 才讨论 Random / Predicted / Oracle formal repair loop.
 
 `reports/phase2_injection/phase2_final_report.md` 是历史阶段 2 关闭报告, 其中保留的阶段 3 Top-1 / Top-3 建议属于旧口径. 当前后续执行以 `docs/` 中更新后的阶段 3 新口径为准, 不回写历史实验报告.
 

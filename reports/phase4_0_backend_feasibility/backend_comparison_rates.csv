@@ -1,0 +1,6 @@
+backend_name,selected_case_denominator,attempt_rows,candidate_count_sum,proposal_count_sum,failure_attempt_rate,candidate_readable_rate,fixed_structure_match_rate,anchor_integrity_rate,reliable_candidate_rate,sample_reliable_repair_yield,proposal_per_case_mean,candidate_per_case_mean,cost_per_reliable_case
+diffdec_single_rgroup,40,40,312,320,0.025000,1.000000,1.000000,0.990385,0.000000,0.000000,8.000000,7.800000,NA
+diffsbdd_conditional_inpainting,40,80,624,640,0.025000,1.000000,1.000000,0.403846,0.027244,0.225000,16.000000,15.600000,71.111111
+diffsbdd_full_resampling,40,40,320,320,0.000000,1.000000,0.000000,0.000000,0.000000,0.000000,8.000000,8.000000,NA
+diffsbdd_joint_inpainting,40,40,0,0,1.000000,NA,NA,NA,NA,0.000000,0.000000,0.000000,NA
+rule_fixed_topology,40,40,320,1200,0.000000,1.000000,1.000000,1.000000,0.709375,0.950000,30.000000,8.000000,31.578947

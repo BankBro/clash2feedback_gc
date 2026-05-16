@@ -1,0 +1,2 @@
+backend_name,candidate_denominator,candidate_readable_rate,ligand_valid_rate,pocket_retention_rate,no_new_severe_clash_rate,fixed_structure_match_rate,anchor_integrity_rate,reliable_local_repair_success_count
+diffsbdd_full_resampling,320,1.000000,0.978125,0.000000,0.000000,0.000000,0.000000,0
