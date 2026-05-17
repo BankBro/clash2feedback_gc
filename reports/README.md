@@ -152,3 +152,19 @@
 - `phase4_0_1_completion_audit.md`
 
 这些报告只记录 DiffSBDD conditional `center=pocket` 的 K=8/16/32 修补实验和诊断结果. 阶段 4.0.1 不生成正式 final report; 临时实验汇报写入 `tmp/20260517/`.
+
+## 9. 阶段 4.0.1a local reconnect calibration 报告
+
+`reports/phase4_0_1a_local_reconnect_calibration/` 由阶段 4.0.1a CLI 生成:
+
+- `local_reconnect_calibration_summary.json`
+- `local_reconnect_calibration_cases.csv`
+- `local_reconnect_category_counts.csv`
+- `diffsbdd_reconnect_reclassified.csv`
+- `rule_positive_reconnect_check.csv`
+- `clean_positive_reconnect_check.csv`
+- `synthetic_negative_reconnect_check.csv`
+- `reconnect_shadow_reliable_analysis.csv`
+- `phase4_0_1a_completion_audit.md`
+
+这些报告只做 report-only / audit-only reconnect 规则校准. 其中 `multi_attachment_out_of_scope` 表示超出当前 single-anchor R-group repair 范围, 不等于 ligand invalid. 本阶段不回写阶段 4.0 或 4.0.1 历史结果.

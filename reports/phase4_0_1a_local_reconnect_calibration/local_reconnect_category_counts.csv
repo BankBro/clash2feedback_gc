@@ -1,0 +1,11 @@
+source_group,candidate_budget_k,reconnect_category,count
+clean_positive,0,single_anchor_reconnect_pass,40
+diffsbdd_candidates,8,invalid_reconnect,234
+diffsbdd_candidates,8,multi_attachment_out_of_scope,79
+diffsbdd_candidates,16,invalid_reconnect,465
+diffsbdd_candidates,16,multi_attachment_out_of_scope,160
+diffsbdd_candidates,32,invalid_reconnect,925
+diffsbdd_candidates,32,multi_attachment_out_of_scope,324
+rule_positive,8,single_anchor_reconnect_pass,227
+synthetic_negative,0,invalid_reconnect,3
+synthetic_negative,0,multi_attachment_out_of_scope,1

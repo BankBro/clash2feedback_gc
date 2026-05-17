@@ -1,0 +1,69 @@
+schema_version: "phase4_0_1a_local_reconnect_calibration_v0_1"
+mode: "report_only_audit_only"
+seed: 20260517
+
+inputs:
+  phase4_0_1_plan_doc: "docs/20260517-Clash2Feedback-GC_阶段4.0.1a局部接回诊断规则校准方案总纲.md"
+  phase4_0_1_summary: "reports/phase4_0_1_diffsbdd_conditional_repair/phase4_0_1_summary.json"
+  phase4_0_1_anchor_reconnect_audit: "reports/phase4_0_1_diffsbdd_conditional_repair/diffsbdd_anchor_reconnect_audit.csv"
+  phase4_0_1_verifier_outcome: "reports/phase4_0_1_diffsbdd_conditional_repair/diffsbdd_verifier_outcome.csv"
+  phase4_0_1_candidate_manifest: "reports/phase4_0_1_diffsbdd_conditional_repair/diffsbdd_candidate_manifest.csv"
+  phase4_0_1_budget_curve: "reports/phase4_0_1_diffsbdd_conditional_repair/diffsbdd_budget_curve.csv"
+  phase4_0_1_selected_cases: "reports/phase4_0_1_diffsbdd_conditional_repair/selected_cases.csv"
+  phase4_0_verifier_outcome: "reports/phase4_0_backend_feasibility/verifier_outcome.csv"
+  phase4_0_candidate_manifest: "reports/phase4_0_backend_feasibility/candidate_manifest.csv"
+  phase4_0_backend_comparison: "reports/phase4_0_backend_feasibility/backend_comparison.csv"
+  phase4_0_selected_cases: "reports/phase4_0_backend_feasibility/selected_cases.csv"
+  phase4_0_config: "configs/phase4_0_backend_feasibility.yaml"
+  phase4_mask_seed: "reports/phase3_label_provenance_audit/phase4_mask_seed.csv"
+  phase2_manifest: "data/benchmarks/clashrepairbench_rg_artificial/v0_1/manifest.parquet"
+  phase2_benchmark_root: "data/benchmarks/clashrepairbench_rg_artificial/v0_1"
+  processed_root: "data/processed/v0_1"
+
+outputs:
+  report_root: "reports/phase4_0_1a_local_reconnect_calibration"
+  expt_report: "tmp/20260517/phase4-0-1a-local-reconnect-calibration-expt-report.md"
+  conflict_report: "tmp/20260517/phase4-0-1a-local-reconnect-calibration-conflict-report.md"
+
+calibration:
+  fixed_structure_match_tolerance_angstrom: 0.35
+  rule_positive_backend_name: "rule_fixed_topology"
+  rule_positive_only_reliable: true
+  rule_positive_candidate_budget_k: 8
+  clean_positive_source: "original_ligand_sdf"
+  synthetic_negative_cases:
+    - "disconnected"
+    - "floating"
+    - "extra_attachment"
+    - "missing_anchor"
+
+guards:
+  rerun_diffsbdd: false
+  regenerate_candidates: false
+  train_or_finetune_model: false
+  modify_diffsbdd_denoising_loop: false
+  modify_reliable_repair_fields: false
+  local_reconnect_enters_reliable_repair_standard: false
+  multi_attachment_is_ligand_invalid: false
+  forbidden_diff_paths:
+    - "reports/phase2_injection/"
+    - "reports/phase2_5_model_induced_audit/"
+    - "reports/phase3_label_provenance_audit/phase4_mask_seed.csv"
+    - "reports/phase3_label_provenance_audit/summary.json"
+    - "reports/phase3_label_provenance_audit/phase3_final_experiment_report.md"
+    - "reports/phase4_0_backend_feasibility/phase4_0_final_experiment_report.md"
+    - "reports/phase4_0_backend_feasibility/backend_comparison.csv"
+    - "reports/phase4_0_backend_feasibility/backend_comparison_rates.csv"
+    - "reports/phase4_0_backend_feasibility/candidate_manifest.csv"
+    - "reports/phase4_0_backend_feasibility/verifier_outcome.csv"
+    - "reports/phase4_0_backend_feasibility/phase4_0_small_scale_summary.json"
+    - "reports/phase4_0_1_diffsbdd_conditional_repair/phase4_0_1_summary.json"
+    - "reports/phase4_0_1_diffsbdd_conditional_repair/diffsbdd_budget_curve.csv"
+    - "reports/phase4_0_1_diffsbdd_conditional_repair/diffsbdd_failure_funnel.csv"
+    - "reports/phase4_0_1_diffsbdd_conditional_repair/diffsbdd_verifier_outcome.csv"
+    - "reports/phase4_0_1_diffsbdd_conditional_repair/diffsbdd_candidate_manifest.csv"
+    - "reports/phase4_0_1_diffsbdd_conditional_repair/diffsbdd_anchor_reconnect_audit.csv"
+    - "data/benchmarks/clashrepairbench_rg_artificial/v0_1/"
+    - "external/DiffSBDD/"
+    - "external/DiffDec/"
+    - "runs/"

@@ -1,0 +1,5 @@
+candidate_budget_k,candidate_count,reliable_repair_success_count,strict_single_anchor_shadow_reliable_count,strict_single_anchor_shadow_reliable_rate,single_anchor_reconnect_pass_count,multi_attachment_out_of_scope_count,invalid_reconnect_count
+-1,2187,48,0,0.0,0,563,1624
+8,313,10,0,0.0,0,79,234
+16,625,14,0,0.0,0,160,465
+32,1249,24,0,0.0,0,324,925

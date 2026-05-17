@@ -122,3 +122,12 @@ python scripts/phase4_0_1_diffsbdd_conditional_repair.py \
 `phase4_0_1_diffsbdd_conditional_repair.py` 只修补 DiffSBDD conditional inpainting 链路: 复用阶段 4.0 的 40 个 selected cases, 主设置固定 `center=pocket`, formal 模式运行 K=8/16/32 单轮候选预算曲线, 并输出 anchor-aware filtering, local reconnect check 和 generated fragment diagnostics. 该脚本不重跑 rule backend, 不修 DiffDec 或 DiffSBDD joint, 不训练/微调 DiffSBDD, 不修改 DiffSBDD 原始去噪过程, 不覆盖阶段 4.0 历史结果.
 
 GPU 运行使用 `external/DiffSBDD` 的本地实验分支 `20260517-080227-phase4-0-1-gpu-inpaint-fix`, 仅修复 `inpaint.py` 在 SDF 写出前的 `lig_mask` CPU/CUDA 设备不一致问题, 不改 DiffSBDD denoising 过程.
+
+## 9. 阶段 4.0.1a local reconnect calibration 命令
+
+```bash
+python scripts/phase4_0_1a_local_reconnect_calibration.py \
+  --config configs/phase4_0_1a_local_reconnect_calibration.yaml
+```
+
+`phase4_0_1a_local_reconnect_calibration.py` 只读取阶段 4.0 和 4.0.1 既有报告与候选 SDF, 对 local reconnect 诊断做 `single_anchor_reconnect_pass`, `multi_attachment_out_of_scope`, `invalid_reconnect` 三分类校准. 该脚本不重跑 DiffSBDD, 不重新生成候选, 不训练或微调模型, 不修改 reliable repair 10 项标准, 不覆盖阶段 4.0 或 4.0.1 历史结果.
