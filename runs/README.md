@@ -4,6 +4,8 @@
 
 本目录存放较重运行产物, 例如日志, checkpoint, 生成候选和可视化辅助资产. 这些文件默认不提交 Git.
 
+`runs/.gitignore` 默认忽略本目录下所有运行产物, 仅保留 `AGENTS.md`, `README.md`, `.gitignore` 和各阶段 `.gitkeep` 占位文件可提交.
+
 ## 2. 阶段 0 产物
 
 - `phase0_visual_check/`: 阶段 0 人工可视化抽查辅助资产, 默认抽样 15 个样本, 包括 `protein.pdb`, `ligand.sdf`, projection PNG, PyMOL 脚本, ChimeraX 多视图脚本, 批量渲染图片和 scaffold/R-group/anchor 标记层.

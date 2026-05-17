@@ -1,0 +1,9 @@
+# Runtime outputs are local-only by default.
+*
+
+# Keep directory policy and lightweight placeholders trackable.
+!.gitignore
+!AGENTS.md
+!README.md
+!*/.gitkeep
+
