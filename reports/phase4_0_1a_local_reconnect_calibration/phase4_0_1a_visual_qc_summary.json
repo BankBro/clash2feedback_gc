@@ -1,0 +1,77 @@
+{
+  "schema_version": "phase4_0_1a_visual_qc_v0_1",
+  "mode": "visual_qc_closeout_report_only",
+  "status": "completed_with_codex_visual_review",
+  "git_branch": "20260517-161211-phase4-0-1a",
+  "git_head": "6f5a882e4cf6ce114c233184adcc2ee622dbd940",
+  "git_status_short": "## 20260517-161211-phase4-0-1a...origin/20260517-161211-phase4-0-1a\n M README.md\n M configs/README.md\n M \"docs/20260517-Clash2Feedback-GC_\\351\\230\\266\\346\\256\\2654.0.1a\\345\\261\\200\\351\\203\\250\\346\\216\\245\\345\\233\\236\\350\\257\\212\\346\\226\\255\\350\\247\\204\\345\\210\\231\\346\\240\\241\\345\\207\\206\\346\\226\\271\\346\\241\\210\\346\\200\\273\\347\\272\\262.md\"\n M reports/README.md\n M scripts/README.md\n M src/README.md\n?? configs/phase4_0_1a_visual_qc.yaml\n?? reports/phase4_0_1a_local_reconnect_calibration/manual_review_template.csv\n?? reports/phase4_0_1a_local_reconnect_calibration/phase4_0_1a_visual_qc_summary.json\n?? reports/phase4_0_1a_local_reconnect_calibration/visual_qc_contact_sheets.csv\n?? reports/phase4_0_1a_local_reconnect_calibration/visual_qc_reconnect_cases.csv\n?? reports/phase4_0_1a_local_reconnect_calibration/visual_qc_reconnect_notes.md\n?? reports/phase4_0_1a_local_reconnect_calibration/visual_qc_render_manifest.csv\n?? scripts/phase4_0_1a_visual_qc.py\n?? src/clash2feedback/repair/reconnect_visual_qc.py\n?? tests/test_phase4_0_1a_visual_qc.py\n?? tmp/20260517/phase4-0-1a-visual-qc-codex-goal-exec-plan.md\n?? tmp/20260517/phase4-0-1a-visual-qc-expt-report.md",
+  "rerun_diffsbdd": false,
+  "regenerate_candidates": false,
+  "training_or_finetuning_performed": false,
+  "modify_reliable_repair_fields": false,
+  "local_reconnect_enters_reliable_repair_standard": false,
+  "multi_attachment_is_ligand_invalid": false,
+  "final_report_generated": false,
+  "sample_count": 25,
+  "sampling_group_counts": {
+    "diffsbdd_reliable_strict_shadow_fail": 7,
+    "diffsbdd_invalid_non_reliable": 6,
+    "diffsbdd_multi_non_reliable": 6,
+    "clean_positive": 3,
+    "rule_positive": 3
+  },
+  "reconnect_category_counts": {
+    "multi_attachment_out_of_scope": 11,
+    "invalid_reconnect": 8,
+    "single_anchor_reconnect_pass": 6
+  },
+  "render_task_count": 900,
+  "render_status_counts": {
+    "rendered": 900
+  },
+  "contact_sheet_count": 75,
+  "contact_sheet_status_counts": {
+    "written": 75
+  },
+  "camera_quality_counts": {
+    "camera_quality_good": 64,
+    "camera_quality_usable": 9,
+    "camera_quality_poor": 2
+  },
+  "camera_retry_count_total": 0,
+  "codex_image_review_status": "completed_contact_sheet_review",
+  "codex_image_reviewed_case_count": 25,
+  "review_panel_count": 25,
+  "local_png_count": 1000,
+  "local_run_asset_size": "126M",
+  "manual_visual_label_counts": {
+    "looks_single_anchor_connected": 6,
+    "looks_multi_attachment": 5,
+    "looks_floating_fragment": 5,
+    "looks_possible_linker_or_bridge": 4,
+    "needs_further_review": 3,
+    "looks_mapping_uncertain": 1,
+    "looks_disconnected": 1
+  },
+  "manual_visual_confidence_counts": {
+    "high": 18,
+    "medium": 4,
+    "low": 3
+  },
+  "needs_user_review_count": 4,
+  "needs_user_review_cases": [
+    "vqc_003",
+    "vqc_009",
+    "vqc_018",
+    "vqc_019"
+  ],
+  "codex_visual_review_overall": "manual visual review broadly supports clean/rule single-anchor positives and DiffSBDD invalid/multi reconnect failures; cases vqc_003, vqc_009, vqc_018, vqc_019 require targeted user review before final report wording.",
+  "visual_qc_closeout_recommendation": "do_not_generate_final_report_yet; phase4.0.1a is closeable after user/web review confirms the four needs_user_review cases.",
+  "test_results": {
+    "compileall_src_scripts": "passed",
+    "tests/test_phase4_0_1a_local_reconnect_calibration.py": "4 passed",
+    "tests/test_phase4_0_1a_visual_qc.py": "3 passed",
+    "tests/test_render_visual_check.py": "10 passed",
+    "full_pytest": "141 passed in 8.87s"
+  }
+}

@@ -166,5 +166,11 @@
 - `synthetic_negative_reconnect_check.csv`
 - `reconnect_shadow_reliable_analysis.csv`
 - `phase4_0_1a_completion_audit.md`
+- `visual_qc_reconnect_cases.csv`
+- `visual_qc_reconnect_notes.md`
+- `phase4_0_1a_visual_qc_summary.json`
+- `visual_qc_render_manifest.csv`
+- `visual_qc_contact_sheets.csv`
+- `manual_review_template.csv`
 
-这些报告只做 report-only / audit-only reconnect 规则校准. 其中 `multi_attachment_out_of_scope` 表示超出当前 single-anchor R-group repair 范围, 不等于 ligand invalid. 本阶段不回写阶段 4.0 或 4.0.1 历史结果.
+这些报告只做 report-only / audit-only reconnect 规则校准和 visual QC 收尾. 其中 `multi_attachment_out_of_scope` 表示超出当前 single-anchor R-group repair 范围, 不等于 ligand invalid. visual QC 的重资产图片和 ChimeraX 资产写入 `runs/phase4_0_1a_visual_qc/`, 默认不提交; reports 下只保留轻量索引, manifest, review 模板和临时说明. 本阶段不回写阶段 4.0 或 4.0.1 历史结果.

@@ -131,3 +131,10 @@ python scripts/phase4_0_1a_local_reconnect_calibration.py \
 ```
 
 `phase4_0_1a_local_reconnect_calibration.py` 只读取阶段 4.0 和 4.0.1 既有报告与候选 SDF, 对 local reconnect 诊断做 `single_anchor_reconnect_pass`, `multi_attachment_out_of_scope`, `invalid_reconnect` 三分类校准. 该脚本不重跑 DiffSBDD, 不重新生成候选, 不训练或微调模型, 不修改 reliable repair 10 项标准, 不覆盖阶段 4.0 或 4.0.1 历史结果.
+
+```bash
+python scripts/phase4_0_1a_visual_qc.py \
+  --config configs/phase4_0_1a_visual_qc.yaml
+```
+
+`phase4_0_1a_visual_qc.py` 是阶段 4.0.1a 的 visual QC 收尾入口: 从既有 reconnect 校准表中抽 25 个候选, 为每个候选生成 `reconnect_clash`, `reconnect_anchor_topology`, `reconnect_before_after_overlay` 三类 `3 x 4` contact sheet, 并输出轻量索引和人工/Codex review 模板. 运行图片和 ChimeraX 资产写入 `runs/phase4_0_1a_visual_qc/`, 默认不提交; reports 下只提交 CSV/JSON/Markdown 索引和临时汇报. 该脚本不重跑 DiffSBDD, 不重新生成候选, 不修改 reliable repair 10 项标准, 不生成 final report.

@@ -1,0 +1,48 @@
+schema_version: "phase4_0_1a_visual_qc_v0_1"
+mode: "visual_qc_closeout_report_only"
+seed: 20260517
+
+inputs:
+  plan_doc: "docs/20260517-Clash2Feedback-GC_阶段4.0.1a局部接回诊断规则校准方案总纲.md"
+  diffsbdd_reclassified: "reports/phase4_0_1a_local_reconnect_calibration/diffsbdd_reconnect_reclassified.csv"
+  clean_positive: "reports/phase4_0_1a_local_reconnect_calibration/clean_positive_reconnect_check.csv"
+  rule_positive: "reports/phase4_0_1a_local_reconnect_calibration/rule_positive_reconnect_check.csv"
+  selected_cases: "reports/phase4_0_1_diffsbdd_conditional_repair/selected_cases.csv"
+  phase2_manifest: "data/benchmarks/clashrepairbench_rg_artificial/v0_1/manifest.parquet"
+  phase2_benchmark_root: "data/benchmarks/clashrepairbench_rg_artificial/v0_1"
+  processed_root: "data/processed/v0_1"
+
+outputs:
+  report_root: "reports/phase4_0_1a_local_reconnect_calibration"
+  run_root: "runs/phase4_0_1a_visual_qc"
+  expt_report: "tmp/20260517/phase4-0-1a-visual-qc-expt-report.md"
+
+sampling:
+  quotas:
+    clean_positive: 3
+    rule_positive: 3
+    diffsbdd_invalid_non_reliable: 6
+    diffsbdd_multi_non_reliable: 6
+    diffsbdd_reliable_strict_shadow_fail: 7
+
+render:
+  chimerax: "chimerax"
+  num_clear_views: 12
+  candidate_directions: 256
+  width: 1200
+  height: 900
+  timeout_seconds: 240
+  close_contact_overlap_threshold_angstrom: 0.0
+  dry_run: false
+  skip_existing: true
+  no_contact_sheets: false
+
+guards:
+  rerun_diffsbdd: false
+  regenerate_candidates: false
+  train_or_finetune_model: false
+  modify_diffsbdd_denoising_loop: false
+  modify_reliable_repair_fields: false
+  local_reconnect_enters_reliable_repair_standard: false
+  multi_attachment_is_ligand_invalid: false
+  generate_final_report: false

@@ -2,7 +2,7 @@
 
 ## 1. 目录说明
 
-本目录存放各阶段配置文件. 当前已实现 `phase0.yaml`, `phase1_clash_detector.yaml`, `phase2_injection.yaml`, `phase2_5_model_induced_audit.yaml`, `phase3_label_provenance_audit.yaml`, `phase4_0_backend_feasibility.yaml`, `phase4_0_1_diffsbdd_conditional_repair.yaml` 和 `phase4_0_1a_local_reconnect_calibration.yaml`.
+本目录存放各阶段配置文件. 当前已实现 `phase0.yaml`, `phase1_clash_detector.yaml`, `phase2_injection.yaml`, `phase2_5_model_induced_audit.yaml`, `phase3_label_provenance_audit.yaml`, `phase4_0_backend_feasibility.yaml`, `phase4_0_1_diffsbdd_conditional_repair.yaml`, `phase4_0_1a_local_reconnect_calibration.yaml` 和 `phase4_0_1a_visual_qc.yaml`.
 
 ## 2. 当前配置
 
@@ -14,5 +14,6 @@
 - `phase4_0_backend_feasibility.yaml`: 阶段 4.0 后端可行性审计配置, 支持 5 case preflight 和 40 case formal, 覆盖规则型固定拓扑局部修复, DiffSBDD conditional inpainting, DiffSBDD full-ligand resampling, DiffDec single R-group scaffold decoration, blocked backend inventory 和禁止修改范围配置.
 - `phase4_0_1_diffsbdd_conditional_repair.yaml`: 阶段 4.0.1 DiffSBDD conditional repair 配置, 复用阶段 4.0 的 40 case, 只运行 `center=pocket` 的 DiffSBDD conditional, 记录 K=8/16/32 预算曲线和 anchor/reconnect/fragment 诊断.
 - `phase4_0_1a_local_reconnect_calibration.yaml`: 阶段 4.0.1a local reconnect 规则校准配置, 只读取阶段 4.0 和 4.0.1 既有结果, 生成三分类 reconnect 审计和 shadow analysis, 不重跑生成器.
+- `phase4_0_1a_visual_qc.yaml`: 阶段 4.0.1a visual QC 收尾配置, 从既有 reconnect 校准表抽样 25 个候选并渲染三类 contact sheet, 不重跑 DiffSBDD, 不重新生成候选, 不生成 final report.
 
 配置中不要写本机绝对路径, 密钥或临时实验说明.
