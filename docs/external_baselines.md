@@ -22,15 +22,16 @@ Conda environment: diffsbdd
 Mode in this project: frozen inference only
 ```
 
-Phase 4.0.1 GPU inpainting 使用本地外部仓库实验分支, 不合入 DiffSBDD 原始 `main`:
+Phase 4.0.1 GPU inpainting 使用 Clash2Feedback-GC 外部补丁分支, 不合入 DiffSBDD 原始 `main`:
 
 ```text
-Branch: 20260517-080227-phase4-0-1-gpu-inpaint-fix
+Branch: clash2feedback_gc
 Base commit: 5d0d38d16c8932a0339fd2ce3f67ade98bbdff27
 Patch commit: a3d49bba85d6426120759cd7b1b856d9b84471f2
 Patch scope: external/DiffSBDD/inpaint.py moves lig_mask to CPU before batch_to_list in molecule-building post-processing.
 Denoising change: no
 Reason: the original GPU path moves generated x and atom_type tensors to CPU, but leaves lig_mask on CUDA, causing a CPU/CUDA tensor indexing error before SDF writing.
+Historical branch name used during Phase 4.0.1 run: 20260517-080227-phase4-0-1-gpu-inpaint-fix
 ```
 
 关键源码路径:
@@ -145,4 +146,5 @@ limitation:
 
 - 新增外部 baseline 时, 在本文档增加 source repo, pinned commit, local path, checkpoint provenance 和关键代码路径。
 - 外部源码, checkpoint 和生成缓存保留在 `external/` 或 `runs/`, 默认不提交 Git。
+- 外部源码非必要不修改; 必须修补阻塞 bug 或兼容性问题时, 补丁统一提交到对应外部仓库的 `clash2feedback_gc` 分支, 并保持外部方法原有算法原理和语义不变。
 - 单次实验的实际命令, GPU 状态, smoke test 和结果摘要写入 `reports/`, 不写入本文档。

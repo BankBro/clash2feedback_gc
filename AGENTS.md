@@ -11,7 +11,7 @@
 - 预读要求: 修改某个目录前, 先阅读根目录和该目录下最近的 `AGENTS.md`.
 - 文档同步: 每次项目结构, 行为或使用方式变化时, 同步更新相应目录下的 `README.md`, 删除过时内容, 并保持文档简洁凝练.
 - HF 下载: 使用 Hugging Face 数据或模型文件前, 优先检查可用镜像; 镜像可用时优先通过镜像下载, 并在记录中保留原始来源. 下载缓存应显式放入本项目相关目录, 优先使用 `data/cache/`, 避免写入默认 `~/.cache/huggingface`.
-- 外部 baseline: `external/` 下的外部源码和 checkpoint 默认不提交 Git. 需要长期复现或让外部读者访问源码时, 先查 `docs/external_baselines.md` 中记录的 source repo, pinned commit, checkpoint URL 和关键代码路径, 不要假设远端读者能看到本地 `external/` 目录.
+- 外部 baseline: `external/` 下的外部源码和 checkpoint 默认不提交 Git. 非必要不修改外部源码; 必须修补 bug 或兼容性问题时, 优先保持原有算法原理和语义不变, 并在对应外部仓库的 `clash2feedback_gc` 分支上提交补丁. 需要长期复现或让外部读者访问源码时, 先查 `docs/external_baselines.md` 中记录的 source repo, pinned commit, checkpoint URL 和关键代码路径, 不要假设远端读者能看到本地 `external/` 目录.
 
 ## 2. 目录索引
 
