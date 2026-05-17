@@ -41,7 +41,7 @@
 - 默认主控环境: 使用 `conda run -n c2f_cpu ...` 运行本项目 Python 脚本, 单元测试和 `compileall`.
 - 不直接使用系统 Python 执行依赖 RDKit, pandas, pyarrow 等项目依赖的脚本.
 - 外部 DiffSBDD 生成只在明确需要生成候选时使用独立 `diffsbdd` 环境; report-only / audit-only 阶段不得调用该环境重跑生成.
-- DiffDec 相关实验使用其专用环境; 未经任务明确要求, 不修补或重跑 DiffDec adapter.
+- DiffDec 相关实验使用 `DiffDec` conda 环境; 未经任务明确要求, 不修补或重跑 DiffDec adapter.
 - 环境级修改, 例如新建/更新 conda 环境, 安装依赖或改外部环境配置, 需要用户明确确认.
 
 ## 4. 变更管理
