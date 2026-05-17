@@ -133,3 +133,22 @@
 - `phase4_0_completion_audit.md`
 
 这些报告覆盖 5 case preflight 和 40 case formal 小规模后端可行性审计. 规则型后端候选, DiffSBDD adapter/log, DiffSBDD full-resampling 输出和 DiffDec 输出放在 `runs/phase4_0_backend_feasibility/`. 阶段 4.0 不训练/微调模型, 不修改 DiffSBDD/DiffDec 原始源码, 不回写阶段 2/2.5/3 历史报告.
+
+## 8. 阶段 4.0.1 DiffSBDD conditional repair 报告
+
+`reports/phase4_0_1_diffsbdd_conditional_repair/` 由阶段 4.0.1 CLI 生成:
+
+- `selected_cases.csv`
+- `preflight_cases.csv`
+- `phase4_0_1_summary.json`
+- `diffsbdd_budget_curve.csv`
+- `diffsbdd_failure_funnel.csv`
+- `diffsbdd_anchor_reconnect_audit.csv`
+- `diffsbdd_candidate_manifest.csv`
+- `diffsbdd_verifier_outcome.csv`
+- `diffsbdd_failure_cases.csv`
+- `diffsbdd_case_level_summary.csv`
+- `phase4_0_vs_4_0_1_comparison.csv`
+- `phase4_0_1_completion_audit.md`
+
+这些报告只记录 DiffSBDD conditional `center=pocket` 的 K=8/16/32 修补实验和诊断结果. 阶段 4.0.1 不生成正式 final report; 临时实验汇报写入 `tmp/20260517/`.

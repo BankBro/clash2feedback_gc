@@ -104,3 +104,21 @@ python scripts/phase4_0_backend_feasibility.py \
 ```
 
 `phase4_0_backend_feasibility.py` 实现阶段 4.0 后端可行性审计闭环: `preflight` 冻结 5 个 S2 case, `formal` 选择 40 个 S2 case. 脚本运行规则型固定拓扑局部构象修复, DiffSBDD CrossDocked full-atom conditional local completion, DiffSBDD full-ligand resampling 和 DiffDec single R-group scaffold decoration, 并把所有候选或失败尝试送入统一 verifier adapter. DiffSBDD joint checkpoint 可被 inventory 记录, 但官方 inpaint 入口不兼容时写入 blocked. 该脚本不训练/微调模型, 不修改 DiffSBDD/DiffDec 原始源码, 不回写阶段 2/2.5/3 历史结果.
+
+## 8. 阶段 4.0.1 DiffSBDD conditional repair 命令
+
+```bash
+python scripts/phase4_0_1_diffsbdd_conditional_repair.py \
+  --config configs/phase4_0_1_diffsbdd_conditional_repair.yaml \
+  --mode preflight
+```
+
+```bash
+python scripts/phase4_0_1_diffsbdd_conditional_repair.py \
+  --config configs/phase4_0_1_diffsbdd_conditional_repair.yaml \
+  --mode formal
+```
+
+`phase4_0_1_diffsbdd_conditional_repair.py` 只修补 DiffSBDD conditional inpainting 链路: 复用阶段 4.0 的 40 个 selected cases, 主设置固定 `center=pocket`, formal 模式运行 K=8/16/32 单轮候选预算曲线, 并输出 anchor-aware filtering, local reconnect check 和 generated fragment diagnostics. 该脚本不重跑 rule backend, 不修 DiffDec 或 DiffSBDD joint, 不训练/微调 DiffSBDD, 不修改 DiffSBDD 原始去噪过程, 不覆盖阶段 4.0 历史结果.
+
+GPU 运行使用 `external/DiffSBDD` 的本地实验分支 `20260517-080227-phase4-0-1-gpu-inpaint-fix`, 仅修复 `inpaint.py` 在 SDF 写出前的 `lig_mask` CPU/CUDA 设备不一致问题, 不改 DiffSBDD denoising 过程.

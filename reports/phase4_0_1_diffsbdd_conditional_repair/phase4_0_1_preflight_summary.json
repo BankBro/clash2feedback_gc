@@ -1,0 +1,70 @@
+{
+  "schema_version": "phase4_0_1_diffsbdd_conditional_repair_v0_1",
+  "mode": "preflight",
+  "selected_case_count": 5,
+  "selected_case_ids": [
+    "case_001300",
+    "case_000509",
+    "case_001316",
+    "case_002080",
+    "case_001704"
+  ],
+  "candidate_budget_ks": [
+    8
+  ],
+  "center": "pocket",
+  "backend_name": "diffsbdd_conditional_inpainting",
+  "training_or_finetuning_performed": false,
+  "h_clash_used_in_diffsbdd_generation": false,
+  "diffsbdd_original_denoising_modified": false,
+  "cuda_visible_devices": "['0', '1']",
+  "reliable_repair_fields": [
+    "candidate_readable",
+    "ligand_valid",
+    "fixed_structure_match_success",
+    "old_clash_resolved",
+    "no_new_severe_clash",
+    "scaffold_stable",
+    "keep_region_stable",
+    "anchor_integrity",
+    "edit_compliance",
+    "pocket_retention"
+  ],
+  "phase4_mask_seed_sha256_before": "18cea12cc4f92a8f21f6f9de83c2ba551556e35a19e9d781d3a98f79b99097cc",
+  "phase4_mask_seed_sha256_after": "18cea12cc4f92a8f21f6f9de83c2ba551556e35a19e9d781d3a98f79b99097cc",
+  "phase4_mask_seed_unchanged": true,
+  "model_inventory": [
+    {
+      "model_key": "diffsbdd_conditional_inpainting",
+      "backend_name": "diffsbdd_conditional_inpainting",
+      "backend_unit": "crossdocked_fullatom_conditional_local_completion",
+      "external_repo": "/home/lyj/mnt/project/clash2feedback_gc/external/DiffSBDD",
+      "repo_commit": "a3d49bba85d6426120759cd7b1b856d9b84471f2",
+      "repo_branch": "20260517-080227-phase4-0-1-gpu-inpaint-fix",
+      "repo_dirty_tracked": "",
+      "expected_repo_commit": "a3d49bba85d6426120759cd7b1b856d9b84471f2",
+      "checkpoint_path": "/home/lyj/mnt/project/clash2feedback_gc/external/DiffSBDD/checkpoints/crossdocked_fullatom_cond.ckpt",
+      "checkpoint_exists": true,
+      "checkpoint_md5": "166b0c056b31ffdf31d489a63e91e05b",
+      "checkpoint_sha256": "07f86764bf569aafbc40a9c15fc02de8e2550437dd0f17f657eab3abe66c372c",
+      "checkpoint_file_size": 17861341,
+      "conda_env": "diffsbdd",
+      "env_status": "ready",
+      "env_check_output": "/home/lyj/miniconda3/envs/diffsbdd/lib/python3.10/site-packages/lightning_lite/__init__.py:29: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n  __import__(\"pkg_resources\").declare_namespace(__name__)\n\nready cuda=True",
+      "status": "ready",
+      "blocked_reason": "",
+      "uses_h_clash_in_generation": false,
+      "source_patch": "{\"branch\": \"20260517-080227-phase4-0-1-gpu-inpaint-fix\", \"base_repo_commit\": \"5d0d38d16c8932a0339fd2ce3f67ade98bbdff27\", \"patch_commit\": \"a3d49bba85d6426120759cd7b1b856d9b84471f2\", \"scope\": \"GPU inpaint post-processing device alignment for lig_mask before batch_to_list\", \"modifies_denoising\": false}"
+    }
+  ],
+  "budget_summary": [
+    {
+      "candidate_budget_k": 8,
+      "attempt_rows": 5,
+      "proposal_count_sum": 40,
+      "candidate_count_sum": 40,
+      "reliable_candidate_success_count": 6,
+      "sample_reliable_success_count": 2
+    }
+  ]
+}

@@ -604,6 +604,8 @@ def _inventory_row(backend_cfg: dict[str, Any], *, repo_root: Path, model_key: s
     if not checkpoint.exists():
         blocked.append(f"checkpoint_missing:{checkpoint}")
     repo_commit = _git_commit(external_repo) if external_repo.exists() else ""
+    repo_branch = _git_branch(external_repo) if external_repo.exists() else ""
+    repo_dirty_tracked = _git_dirty_tracked(external_repo) if external_repo.exists() else ""
     expected_commit = str(backend_cfg.get("expected_repo_commit") or "")
     if expected_commit and repo_commit and repo_commit != expected_commit:
         blocked.append(f"repo_commit_mismatch:{repo_commit}!={expected_commit}")
@@ -624,6 +626,8 @@ def _inventory_row(backend_cfg: dict[str, Any], *, repo_root: Path, model_key: s
         "backend_unit": str(backend_cfg.get("backend_unit") or ""),
         "external_repo": str(external_repo),
         "repo_commit": repo_commit,
+        "repo_branch": repo_branch,
+        "repo_dirty_tracked": repo_dirty_tracked,
         "expected_repo_commit": expected_commit,
         "checkpoint_path": str(checkpoint),
         "checkpoint_exists": bool(checkpoint.exists()),
@@ -636,6 +640,7 @@ def _inventory_row(backend_cfg: dict[str, Any], *, repo_root: Path, model_key: s
         "status": "blocked" if blocked else "ready",
         "blocked_reason": ";".join(blocked),
         "uses_h_clash_in_generation": bool(backend_cfg.get("uses_h_clash_in_generation", False)),
+        "source_patch": json.dumps(backend_cfg.get("source_patch", {}), ensure_ascii=False),
     }
 
 
@@ -667,6 +672,23 @@ def _check_conda_env(conda_env: str) -> tuple[str, str]:
 
 def _git_commit(path: Path) -> str:
     completed = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(path), text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False)
+    return completed.stdout.strip() if completed.returncode == 0 else ""
+
+
+def _git_branch(path: Path) -> str:
+    completed = subprocess.run(["git", "branch", "--show-current"], cwd=str(path), text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False)
+    return completed.stdout.strip() if completed.returncode == 0 else ""
+
+
+def _git_dirty_tracked(path: Path) -> str:
+    completed = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=no"],
+        cwd=str(path),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
     return completed.stdout.strip() if completed.returncode == 0 else ""
 
 

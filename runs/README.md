@@ -36,3 +36,11 @@ python scripts/phase0_render_visual_check_images.py --assets-root runs/phase0_vi
 - `phase2_5_model_induced_audit/logs/`: DiffSBDD 准备, smoke test 和 generation command stdout/stderr 日志.
 
 这些目录只保存运行产物. 轻量统计和 blocked 原因写入 `reports/phase2_5_model_induced_audit/`.
+
+## 4. 阶段 4.0.1 产物
+
+- `phase4_0_1_diffsbdd_conditional_repair/preflight/`: 5 case preflight 的 DiffSBDD conditional 候选, fix_atoms 和日志.
+- `phase4_0_1_diffsbdd_conditional_repair/k8/`, `k16/`, `k32/`: 40 case formal 的各预算运行产物.
+- `phase4_0_1_diffsbdd_conditional_repair/logs/`, `raw_candidates/`, `standardized_candidates/`: 预留给日志和候选归档.
+
+这些目录属于较重运行产物, 默认不提交 Git. 轻量统计写入 `reports/phase4_0_1_diffsbdd_conditional_repair/`.
