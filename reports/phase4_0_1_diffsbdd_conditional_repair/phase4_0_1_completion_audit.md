@@ -28,3 +28,11 @@
 - `python -m compileall src scripts`: passed.
 - targeted pytest: 14 passed.
 - full pytest: 134 passed.
+
+## 4. Closeout Audit
+
+- `phase4_0_1_closeout_audit.md` 已核查 `diffsbdd_anchor_reconnect_audit.csv` 完整性.
+- `diffsbdd_anchor_reconnect_audit.csv` 不是空文件: 1,400,543 bytes, 2,188 行.
+- `diffsbdd_candidate_manifest.csv`, `diffsbdd_verifier_outcome.csv` 和 `diffsbdd_anchor_reconnect_audit.csv` 均有 2,187 条数据记录.
+- `local_reconnect_pass_count=0` 可追溯到候选级 diagnostics/verifier 字段, 不是缺失表导致的聚合占位值.
+- 本次 closeout audit 没有重跑 DiffSBDD 生成, 没有重建候选, 没有修改阶段 4.0 或更早历史结果.
