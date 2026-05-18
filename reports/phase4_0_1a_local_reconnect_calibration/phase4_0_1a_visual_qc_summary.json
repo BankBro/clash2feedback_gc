@@ -21,8 +21,8 @@
     "rule_positive": 3
   },
   "reconnect_category_counts": {
-    "multi_attachment_out_of_scope": 11,
-    "invalid_reconnect": 8,
+    "multi_attachment_out_of_scope": 8,
+    "invalid_reconnect": 11,
     "single_anchor_reconnect_pass": 6
   },
   "render_task_count": 900,
@@ -46,32 +46,26 @@
   "local_run_asset_size": "126M",
   "manual_visual_label_counts": {
     "looks_single_anchor_connected": 6,
-    "looks_multi_attachment": 5,
+    "looks_multi_attachment": 7,
     "looks_floating_fragment": 5,
     "looks_possible_linker_or_bridge": 4,
-    "needs_further_review": 3,
-    "looks_mapping_uncertain": 1,
-    "looks_disconnected": 1
+    "looks_disconnected": 3
   },
   "manual_visual_confidence_counts": {
-    "high": 18,
-    "medium": 4,
-    "low": 3
+    "high": 21,
+    "medium": 4
   },
-  "needs_user_review_count": 4,
-  "needs_user_review_cases": [
-    "vqc_003",
-    "vqc_009",
-    "vqc_018",
-    "vqc_019"
-  ],
-  "codex_visual_review_overall": "manual visual review broadly supports clean/rule single-anchor positives and DiffSBDD invalid/multi reconnect failures; cases vqc_003, vqc_009, vqc_018, vqc_019 require targeted user review before final report wording.",
-  "visual_qc_closeout_recommendation": "do_not_generate_final_report_yet; phase4.0.1a is closeable after user/web review confirms the four needs_user_review cases.",
+  "needs_user_review_count": 0,
+  "needs_user_review_cases": [],
+  "codex_visual_review_overall": "manual visual review supports clean/rule single-anchor positives and DiffSBDD invalid/multi reconnect failures; vqc_009 and vqc_019 are confirmed disconnected/invalid reconnect by image plus RDKit fragment-count evidence, and vqc_018 is confirmed multi_attachment_out_of_scope by user visual review.",
+  "visual_qc_closeout_recommendation": "phase4.0.1a is closeable from visual QC perspective; no remaining mandatory visual QC review cases, final report still waits for user/web ChatGPT discussion.",
   "test_results": {
     "compileall_src_scripts": "passed",
-    "tests/test_phase4_0_1a_local_reconnect_calibration.py": "4 passed",
-    "tests/test_phase4_0_1a_visual_qc.py": "3 passed",
-    "tests/test_render_visual_check.py": "10 passed",
-    "full_pytest": "141 passed in 8.87s"
-  }
+    "tests/test_phase4_0_1a_local_reconnect_calibration.py": "4 passed in 0.42s",
+    "tests/test_phase4_0_1a_local_reconnect_calibration.py + tests/test_phase4_0_1a_visual_qc.py": "7 passed in 0.55s",
+    "full_pytest": "141 passed in 8.47s"
+  },
+  "rule_update_note": "ligand_valid means RDKit sanitize validity; candidate_single_fragment=false or candidate_total_fragment_count > 1 is now classified as invalid_reconnect before multi-attachment checks.",
+  "ligand_valid_semantics": "RDKit sanitize validity only; not equivalent to single connected ligand candidate validity.",
+  "candidate_fragment_priority": "candidate_single_fragment=false or candidate_total_fragment_count > 1 is classified as invalid_reconnect before multi-attachment checks."
 }

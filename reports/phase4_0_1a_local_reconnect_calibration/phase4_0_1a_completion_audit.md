@@ -10,7 +10,7 @@
 ## 2. Repository Facts
 
 - branch: `20260517-161211-phase4-0-1a`.
-- HEAD: `93f1e221cc7e959248a418382e0800250bf6d5f4`.
+- HEAD: `347a303529a547b4f9ccfdbf39c1605299cc518e`.
 - plan doc exists: True.
 - phase4_mask_seed_sha256: `18cea12cc4f92a8f21f6f9de83c2ba551556e35a19e9d781d3a98f79b99097cc`.
 
@@ -21,8 +21,8 @@
 - rule positive cases: 227.
 - synthetic negative cases: 4.
 - single-anchor pass: 0.
-- multi-attachment out-of-scope: 563.
-- invalid reconnect: 1624.
+- multi-attachment out-of-scope: 332.
+- invalid reconnect: 1855.
 - strict single-anchor shadow reliable count: 0.
 - recommended use: `soft_filter`.
 
@@ -30,22 +30,22 @@
 
 | candidate_budget_k | candidate_count | reliable_repair_success_count | strict_single_anchor_shadow_reliable_count | strict_single_anchor_shadow_reliable_rate | single_anchor_reconnect_pass_count | multi_attachment_out_of_scope_count | invalid_reconnect_count |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| -1 | 2187 | 48 | 0 | 0 | 0 | 563 | 1624 |
-| 8 | 313 | 10 | 0 | 0 | 0 | 79 | 234 |
-| 16 | 625 | 14 | 0 | 0 | 0 | 160 | 465 |
-| 32 | 1249 | 24 | 0 | 0 | 0 | 324 | 925 |
+| -1 | 2187 | 48 | 0 | 0 | 0 | 332 | 1855 |
+| 8 | 313 | 10 | 0 | 0 | 0 | 44 | 269 |
+| 16 | 625 | 14 | 0 | 0 | 0 | 94 | 531 |
+| 32 | 1249 | 24 | 0 | 0 | 0 | 194 | 1055 |
 
 ## 5. Category Counts
 
 | source_group | candidate_budget_k | reconnect_category | count |
 | --- | --- | --- | --- |
 | clean_positive | 0 | single_anchor_reconnect_pass | 40 |
-| diffsbdd_candidates | 8 | invalid_reconnect | 234 |
-| diffsbdd_candidates | 8 | multi_attachment_out_of_scope | 79 |
-| diffsbdd_candidates | 16 | invalid_reconnect | 465 |
-| diffsbdd_candidates | 16 | multi_attachment_out_of_scope | 160 |
-| diffsbdd_candidates | 32 | invalid_reconnect | 925 |
-| diffsbdd_candidates | 32 | multi_attachment_out_of_scope | 324 |
+| diffsbdd_candidates | 8 | invalid_reconnect | 269 |
+| diffsbdd_candidates | 8 | multi_attachment_out_of_scope | 44 |
+| diffsbdd_candidates | 16 | invalid_reconnect | 531 |
+| diffsbdd_candidates | 16 | multi_attachment_out_of_scope | 94 |
+| diffsbdd_candidates | 32 | invalid_reconnect | 1055 |
+| diffsbdd_candidates | 32 | multi_attachment_out_of_scope | 194 |
 | rule_positive | 8 | single_anchor_reconnect_pass | 227 |
 | synthetic_negative | 0 | invalid_reconnect | 3 |
 | synthetic_negative | 0 | multi_attachment_out_of_scope | 1 |

@@ -335,6 +335,8 @@ pocket_retention
 reliable_repair_success
 ```
 
+注意：当前历史字段 `ligand_valid` 表示 RDKit sanitize 层面的化学可解析性，不等价于“候选是单个完整 ligand”。候选整体连通性需由 `candidate_single_fragment` 和 `candidate_total_fragment_count` 判断。
+
 若字段缺失，但可由现有字段无歧义计算，Codex 应在计划中说明计算方式。若字段缺失且不可恢复，应生成 conflict report 或 blocked 项。
 
 ---
@@ -405,7 +407,8 @@ generated fragment 与 keep region 存在多个 attachment；
 
 ```text
 候选不可读；
-基础分子合法性失败；
+RDKit sanitize 层面的分子合法性失败；
+候选不是单个连通 ligand；
 固定结构映射失败；
 anchor 不可映射；
 generated fragment 为空；
@@ -421,13 +424,15 @@ generated fragment 为空；
 ```text
 1. 如果 candidate_readable=false 或候选路径缺失：invalid_reconnect；
 2. 如果 ligand_valid=false：invalid_reconnect，但需保留 ligand_valid=false 作为原因；
-3. 如果 fixed_structure_mapping_success_for_diagnostics=false 或 fixed_structure_match_success=false：invalid_reconnect；
-4. 如果 anchor_match_success=false：invalid_reconnect；
-5. 如果 floating_fragment_detected=true：invalid_reconnect；
-6. 如果 generated_fragment_connected_to_anchor=false：invalid_reconnect；
-7. 如果 num_extra_attachments > 0 或 generated_fragment_attachment_count > 1：multi_attachment_out_of_scope；
-8. 如果 num_anchor_neighbors == 1 且 num_extra_attachments == 0 且 no floating fragment：single_anchor_reconnect_pass；
-9. 其他情况：invalid_reconnect，并记录 reconnect_category_reason。
+3. 如果 candidate_total_fragment_count > 1 或 candidate_single_fragment=false：invalid_reconnect，但需保留 candidate fragment count / candidate_not_single_fragment 作为原因；
+4. 如果 fixed_structure_mapping_success_for_diagnostics=false 或 fixed_structure_match_success=false：invalid_reconnect；
+5. 如果 anchor_match_success=false：invalid_reconnect；
+6. 如果 floating_fragment_detected=true：invalid_reconnect；
+7. 如果 generated_fragment_connected_to_anchor=false：invalid_reconnect；
+8. 如果 num_extra_attachments > 0 或 generated_fragment_attachment_count > 1：multi_attachment_out_of_scope；
+9. 如果 num_anchor_neighbors > 1：multi_attachment_out_of_scope，并保留 anchor_neighbor_count 作为原因；
+10. 如果 num_anchor_neighbors == 1 且 num_extra_attachments == 0 且 no floating fragment：single_anchor_reconnect_pass；
+11. 其他情况：invalid_reconnect，并记录 reconnect_category_reason。
 ```
 
 上述优先级需由本地 Codex 根据真实字段校准。如果真实字段语义不同，应在 `/plan` 中提出调整。
@@ -494,6 +499,7 @@ old_clash_resolved
 no_new_severe_clash
 anchor_integrity
 ligand_valid
+candidate_single_fragment
 failure_reason / reconnect_category_reason
 ```
 

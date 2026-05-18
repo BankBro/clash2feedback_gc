@@ -21,6 +21,8 @@ def _base_row() -> dict:
         "generated_fragment_attachment_count": 1,
         "num_anchor_neighbors": 1,
         "num_extra_attachments": 0,
+        "candidate_single_fragment": True,
+        "candidate_total_fragment_count": 1,
     }
 
 
@@ -34,12 +36,35 @@ def test_reconnect_three_way_classification() -> None:
     assert result["reconnect_category"] == "multi_attachment_out_of_scope"
     assert "ligand_valid" not in result["reconnect_category_reason"]
 
+    anchor_multi = _base_row()
+    anchor_multi["num_anchor_neighbors"] = 2
+    anchor_multi_result = classify_reconnect_row(anchor_multi)
+    assert anchor_multi_result["reconnect_category"] == "multi_attachment_out_of_scope"
+    assert anchor_multi_result["reconnect_category_reason"] == "anchor_neighbor_count=2"
+
+    split_candidate = _base_row()
+    split_candidate["candidate_single_fragment"] = False
+    split_candidate["candidate_total_fragment_count"] = 2
+    split_candidate["num_extra_attachments"] = 4
+    split_candidate_result = classify_reconnect_row(split_candidate)
+    assert split_candidate_result["reconnect_category"] == "invalid_reconnect"
+    assert split_candidate_result["reconnect_category_reason"] == "candidate_fragment_count=2"
+
+    split_candidate_without_count = _base_row()
+    split_candidate_without_count["candidate_single_fragment"] = False
+    split_candidate_without_count.pop("candidate_total_fragment_count")
+    split_candidate_without_count_result = classify_reconnect_row(split_candidate_without_count)
+    assert split_candidate_without_count_result["reconnect_category"] == "invalid_reconnect"
+    assert split_candidate_without_count_result["reconnect_category_reason"] == "candidate_not_single_fragment"
+
     disconnected = _base_row()
     disconnected["generated_fragment_connected_to_anchor"] = False
     assert classify_reconnect_row(disconnected)["reconnect_category"] == "invalid_reconnect"
 
     floating = _base_row()
     floating["floating_fragment_detected"] = True
+    floating["generated_fragment_attachment_count"] = 10
+    floating["num_extra_attachments"] = 9
     assert classify_reconnect_row(floating)["reconnect_category"] == "invalid_reconnect"
 
     missing_anchor = _base_row()

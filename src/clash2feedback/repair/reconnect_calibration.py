@@ -186,6 +186,11 @@ def classify_reconnect_row(row: dict[str, Any] | pd.Series) -> dict[str, Any]:
         return _category("invalid_reconnect", "candidate_path_empty")
     if _field_present(row, "ligand_valid") and not _as_bool(row.get("ligand_valid"), default=True):
         return _category("invalid_reconnect", "ligand_valid=false")
+    fragment_count = _as_int(row.get("candidate_total_fragment_count"), default=1)
+    if _field_present(row, "candidate_total_fragment_count") and fragment_count > 1:
+        return _category("invalid_reconnect", f"candidate_fragment_count={fragment_count}")
+    if _field_present(row, "candidate_single_fragment") and not _as_bool(row.get("candidate_single_fragment"), default=True):
+        return _category("invalid_reconnect", "candidate_not_single_fragment")
     if _field_present(row, "fixed_structure_mapping_success_for_diagnostics") and not _as_bool(
         row.get("fixed_structure_mapping_success_for_diagnostics"),
         default=True,
@@ -207,12 +212,14 @@ def classify_reconnect_row(row: dict[str, Any] | pd.Series) -> dict[str, Any]:
 
     num_extra = _as_int(row.get("num_extra_attachments"), default=0)
     attachment_count = _as_int(row.get("generated_fragment_attachment_count"), default=0)
+    anchor_neighbors = _as_int(row.get("num_anchor_neighbors"), default=-1)
     if num_extra > 0 or attachment_count > 1:
         if num_extra > 0:
             return _category("multi_attachment_out_of_scope", f"extra_attachments={num_extra}")
         return _category("multi_attachment_out_of_scope", f"generated_fragment_attachment_count={attachment_count}")
+    if anchor_neighbors > 1:
+        return _category("multi_attachment_out_of_scope", f"anchor_neighbor_count={anchor_neighbors}")
 
-    anchor_neighbors = _as_int(row.get("num_anchor_neighbors"), default=-1)
     if (
         _as_bool(row.get("generated_fragment_connected_to_anchor"), default=False)
         and anchor_neighbors == 1
